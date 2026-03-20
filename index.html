@@ -5,97 +5,186 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>PaintGuide AR</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
 
 :root {
-  --ink:#0d0d0d; --paper:#f5f0e8; --accent:#e8420a;
-  --muted:#8a8070; --glass:rgba(245,240,232,0.1);
-  --panel:rgba(13,13,13,0.95);
+  --ink: #0d0d0d;
+  --paper: #f5f0e8;
+  --accent: #e8420a;
+  --muted: #8a8070;
 }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow:hidden;}
-body{background:var(--ink);color:var(--paper);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;height:100dvh;}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; }
+body {
+  background:var(--ink); color:var(--paper);
+  font-family:'DM Sans',sans-serif;
+  display:flex; flex-direction:column; height:100dvh;
+}
 
-/* HEADER */
-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;flex-shrink:0;z-index:30;background:var(--ink);}
-header h1{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;}
-header h1 span{color:var(--accent);}
-.tabs{display:flex;background:rgba(245,240,232,0.08);border:1px solid rgba(245,240,232,0.15);border-radius:20px;overflow:hidden;}
-.tabs button{background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:500;padding:6px 12px;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.2s;white-space:nowrap;}
-.tabs button.active{background:var(--accent);color:#fff;border-radius:18px;}
+header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px 8px; flex-shrink:0; background:var(--ink); z-index:30;
+}
+header h1 { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:2px; }
+header h1 span { color:var(--accent); }
 
-/* VIEWPORT */
-.viewport{position:relative;flex:1;overflow:hidden;background:#0a0a0a;min-height:0;}
-#cameraFeed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-#mainCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;}
-#cropCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;display:none;touch-action:none;}
+.tabs {
+  display:flex;
+  background:rgba(245,240,232,0.08);
+  border:1px solid rgba(245,240,232,0.15);
+  border-radius:20px; overflow:hidden;
+}
+.tabs button {
+  background:none; border:none; color:var(--muted);
+  font-family:'DM Sans',sans-serif; font-size:0.68rem; font-weight:500;
+  padding:6px 11px; cursor:pointer;
+  text-transform:uppercase; letter-spacing:0.5px;
+  transition:all 0.2s;
+}
+.tabs button.active { background:var(--accent); color:#fff; border-radius:18px; }
 
-.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);z-index:1;text-align:center;padding:24px;pointer-events:none;}
-.ph svg{opacity:0.2;}
-.ph p{font-size:0.82rem;line-height:1.65;}
-.ph strong{color:var(--paper);}
+.viewport {
+  position:relative; flex:1; overflow:hidden;
+  background:#0a0a0a; min-height:0;
+}
+#cameraFeed {
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; display:block;
+}
+#mainCanvas {
+  position:absolute; inset:0; width:100%; height:100%; z-index:2;
+}
 
-/* BOTTOM PANEL */
-.panel{background:var(--ink);border-top:1px solid rgba(245,240,232,0.07);padding:12px 16px 20px;flex-shrink:0;z-index:30;}
-.pane{display:none;flex-direction:column;gap:9px;}
-.pane.active{display:flex;}
-.row{display:flex;gap:8px;align-items:center;}
+.ph {
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px;
+  color:var(--muted); z-index:1; text-align:center; padding:24px;
+  pointer-events:none;
+}
+.ph svg { opacity:0.2; }
+.ph p { font-size:0.82rem; line-height:1.7; }
+.ph strong { color:var(--paper); }
 
-/* BUTTONS */
-.btn{border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.8rem;padding:11px 14px;cursor:pointer;transition:transform 0.15s,background 0.15s;letter-spacing:0.2px;white-space:nowrap;}
-.btn:active{transform:scale(0.96);}
-.btn-p{background:var(--accent);color:#fff;flex:1;}
-.btn-s{background:rgba(245,240,232,0.08);color:var(--paper);border:1px solid rgba(245,240,232,0.12);flex:1;}
-.btn-s.on{background:rgba(232,66,10,0.18);border-color:var(--accent);color:var(--accent);}
-.btn-sq{background:rgba(245,240,232,0.08);color:var(--paper);border:1px solid rgba(245,240,232,0.12);width:44px;height:44px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:1rem;flex-shrink:0;}
+#cropUI {
+  position:absolute; inset:0; z-index:5; display:none;
+}
+#cropImgEl {
+  position:absolute; transform-origin:top left;
+  user-select:none; pointer-events:none;
+}
+#cropBoxEl {
+  position:absolute;
+  border:2px solid var(--accent);
+  box-shadow:0 0 0 9999px rgba(13,13,13,0.55);
+  cursor:move; touch-action:none;
+}
+.cc {
+  position:absolute; width:24px; height:24px;
+  border-color:var(--accent); border-style:solid;
+  touch-action:none; cursor:pointer;
+}
+.cc.tl { top:-2px; left:-2px;  border-width:3px 0 0 3px; }
+.cc.tr { top:-2px; right:-2px; border-width:3px 3px 0 0; }
+.cc.bl { bottom:-2px; left:-2px;  border-width:0 0 3px 3px; }
+.cc.br { bottom:-2px; right:-2px; border-width:0 3px 3px 0; }
 
-/* SLIDERS */
-.sl-row{display:flex;align-items:center;gap:8px;}
-.sl-row label{font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);width:52px;flex-shrink:0;}
-.sl-row input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:rgba(245,240,232,0.18);border-radius:2px;outline:none;}
-.sl-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;}
-.sl-val{font-size:0.7rem;color:var(--paper);width:34px;text-align:right;flex-shrink:0;}
+#pinHint {
+  position:absolute; top:12px; left:50%; transform:translateX(-50%);
+  background:rgba(13,13,13,0.85); border:1px solid var(--accent);
+  border-radius:8px; padding:7px 16px; font-size:0.75rem;
+  color:var(--paper); z-index:10; pointer-events:none;
+  white-space:nowrap; display:none;
+}
 
-/* TOGGLE CHIPS */
-.chips{display:flex;gap:6px;flex-wrap:wrap;}
-.chip{background:rgba(245,240,232,0.07);border:1px solid rgba(245,240,232,0.12);border-radius:7px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.72rem;padding:6px 11px;cursor:pointer;transition:all 0.18s;}
-.chip.on{background:rgba(232,66,10,0.2);border-color:var(--accent);color:var(--paper);}
+.panel {
+  background:var(--ink);
+  border-top:1px solid rgba(245,240,232,0.07);
+  padding:12px 16px 22px; flex-shrink:0; z-index:30;
+}
+.pane { display:none; flex-direction:column; gap:9px; }
+.pane.active { display:flex; }
+.row { display:flex; gap:8px; align-items:center; }
 
-/* SIZE INPUTS */
-.sz-row{display:flex;align-items:center;gap:7px;background:rgba(245,240,232,0.05);border:1px solid rgba(245,240,232,0.1);border-radius:9px;padding:9px 13px;}
-.sz-row label{font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);white-space:nowrap;}
-.sz-row input{background:none;border:none;border-bottom:1px solid rgba(245,240,232,0.22);color:var(--paper);font-family:'DM Sans',sans-serif;font-size:0.88rem;width:48px;text-align:center;outline:none;padding:2px 3px;}
-.sz-row span{color:var(--muted);font-size:0.72rem;}
+.btn {
+  border:none; border-radius:9px;
+  font-family:'DM Sans',sans-serif; font-weight:500;
+  font-size:0.8rem; padding:12px 14px;
+  cursor:pointer; transition:transform 0.15s, background 0.15s;
+  letter-spacing:0.2px; white-space:nowrap;
+}
+.btn:active { transform:scale(0.96); }
+.btn-p  { background:var(--accent); color:#fff; flex:1; }
+.btn-s  { background:rgba(245,240,232,0.08); color:var(--paper); border:1px solid rgba(245,240,232,0.12); flex:1; }
+.btn-s.on { background:rgba(232,66,10,0.18); border-color:var(--accent); color:var(--accent); }
+.btn-sq {
+  background:rgba(245,240,232,0.08); color:var(--paper);
+  border:1px solid rgba(245,240,232,0.12);
+  width:44px; height:44px; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:9px; font-size:0.85rem; flex-shrink:0; cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+}
 
-/* STATUS */
-.status{display:flex;align-items:center;gap:6px;}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all 0.3s;}
-.dot.g{background:#4caf50;box-shadow:0 0 5px #4caf50;}
-.dot.o{background:#ff9800;box-shadow:0 0 5px #ff9800;}
-#sMsg{font-size:0.7rem;color:var(--muted);}
+.sl-row { display:flex; align-items:center; gap:8px; }
+.sl-row label {
+  font-size:0.65rem; text-transform:uppercase; letter-spacing:1px;
+  color:var(--muted); width:48px; flex-shrink:0;
+}
+.sl-row input[type=range] {
+  flex:1; -webkit-appearance:none; height:3px;
+  background:rgba(245,240,232,0.18); border-radius:2px; outline:none;
+}
+.sl-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:20px; height:20px;
+  border-radius:50%; background:var(--accent); cursor:pointer;
+}
+.sl-val { font-size:0.7rem; color:var(--paper); width:34px; text-align:right; flex-shrink:0; }
 
-/* CANVAS PIN MODE overlay instruction */
-#pinHint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(13,13,13,0.82);border:1px solid var(--accent);border-radius:8px;padding:7px 14px;font-size:0.75rem;color:var(--paper);z-index:10;pointer-events:none;white-space:nowrap;display:none;}
+.chips { display:flex; gap:6px; flex-wrap:wrap; }
+.chip {
+  background:rgba(245,240,232,0.07); border:1px solid rgba(245,240,232,0.12);
+  border-radius:7px; color:var(--muted);
+  font-family:'DM Sans',sans-serif; font-size:0.72rem;
+  padding:6px 11px; cursor:pointer; transition:all 0.18s;
+}
+.chip.on { background:rgba(232,66,10,0.2); border-color:var(--accent); color:var(--paper); }
 
-/* CROP UI inside viewport */
-#cropUI{position:absolute;inset:0;z-index:5;display:none;}
-#cropImg{position:absolute;transform-origin:top left;}
-#cropBox{position:absolute;border:2px solid var(--accent);box-shadow:0 0 0 9999px rgba(13,13,13,0.55);touch-action:none;}
-.cc{position:absolute;width:22px;height:22px;border-color:var(--accent);border-style:solid;touch-action:none;}
-.cc.tl{top:-2px;left:-2px;border-width:3px 0 0 3px;}
-.cc.tr{top:-2px;right:-2px;border-width:3px 3px 0 0;}
-.cc.bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;}
-.cc.br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;}
+.sz-row {
+  display:flex; align-items:center; gap:7px;
+  background:rgba(245,240,232,0.05);
+  border:1px solid rgba(245,240,232,0.1);
+  border-radius:9px; padding:9px 13px;
+}
+.sz-row label { font-size:0.65rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); white-space:nowrap; }
+.sz-row input {
+  background:none; border:none;
+  border-bottom:1px solid rgba(245,240,232,0.22);
+  color:var(--paper); font-family:'DM Sans',sans-serif;
+  font-size:0.88rem; width:48px; text-align:center; outline:none; padding:2px 3px;
+}
+.sz-row span { color:var(--muted); font-size:0.72rem; }
 
-/* HTTPS warning */
-#httpsWarn{display:none;position:fixed;inset:0;z-index:999;background:rgba(13,13,13,0.97);flex-direction:column;align-items:center;justify-content:center;padding:26px;text-align:center;gap:14px;}
-#httpsWarn h2{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--accent);letter-spacing:2px;}
-#httpsWarn p{font-size:0.82rem;line-height:1.7;color:var(--muted);max-width:300px;}
-#httpsWarn p strong{color:var(--paper);}
-#httpsWarn ol{text-align:left;font-size:0.8rem;color:var(--paper);line-height:2;padding-left:20px;max-width:300px;}
-#httpsWarn ol span{color:var(--accent);}
-#fileInput{display:none;}
-#fileInputCrop{display:none;}
+.status { display:flex; align-items:center; gap:6px; }
+.dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:all 0.3s; }
+.dot.g { background:#4caf50; box-shadow:0 0 5px #4caf50; }
+.dot.o { background:#ff9800; box-shadow:0 0 5px #ff9800; }
+.smsg { font-size:0.7rem; color:var(--muted); }
+.info { font-size:0.7rem; color:var(--muted); line-height:1.6; }
+.info strong { color:var(--paper); }
+
+#httpsWarn {
+  display:none; position:fixed; inset:0; z-index:999;
+  background:rgba(13,13,13,0.97);
+  flex-direction:column; align-items:center; justify-content:center;
+  padding:26px; text-align:center; gap:14px;
+}
+#httpsWarn h2 { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; color:var(--accent); letter-spacing:2px; }
+#httpsWarn p { font-size:0.82rem; line-height:1.7; color:var(--muted); max-width:300px; }
+#httpsWarn p strong { color:var(--paper); }
+#httpsWarn ol { text-align:left; font-size:0.8rem; color:var(--paper); line-height:2.2; padding-left:20px; }
+#httpsWarn ol span { color:var(--accent); }
+
+#fileInput, #fileInputCrop { display:none; }
 </style>
 </head>
 <body>
@@ -103,22 +192,20 @@ header h1 span{color:var(--accent);}
 <header>
   <h1>Paint<span>Guide</span></h1>
   <div class="tabs">
-    <button id="tabAR"   class="active" onclick="setTab('ar')">AR</button>
+    <button id="tabAR"   onclick="setTab('ar')">AR</button>
     <button id="tabCrop" onclick="setTab('crop')">Crop</button>
     <button id="tabPin"  onclick="setTab('pin')">Pin</button>
     <button id="tabGrid" onclick="setTab('grid')">Grid</button>
   </div>
 </header>
 
-<div class="viewport">
+<div class="viewport" id="viewport">
   <video id="cameraFeed" autoplay playsinline muted></video>
   <canvas id="mainCanvas"></canvas>
-  <canvas id="cropCanvas"></canvas>
 
-  <!-- Crop UI -->
   <div id="cropUI">
-    <img id="cropImg" draggable="false">
-    <div id="cropBox">
+    <img id="cropImgEl" alt="">
+    <div id="cropBoxEl">
       <div class="cc tl" data-h="tl"></div>
       <div class="cc tr" data-h="tr"></div>
       <div class="cc bl" data-h="bl"></div>
@@ -134,184 +221,638 @@ header h1 span{color:var(--accent);}
       <circle cx="8.5" cy="8.5" r="1.5"/>
       <path d="m21 15-5-5L5 21"/>
     </svg>
-    <p>Tap <strong>\ud83d\udcf7 Start Camera</strong> then<br><strong>\ud83d\udcc1 Load Image</strong> to begin</p>
+    <p>Tap <strong>Start Camera</strong><br>then <strong>Load Image</strong></p>
   </div>
 </div>
 
-<!-- BOTTOM PANELS -->
 <div class="panel">
 
-  <!-- AR TAB -->
-  <div class="pane active" id="paneAR">
+  <div class="pane" id="paneAR">
     <div class="row">
-      <button class="btn btn-p" id="btnCam" onclick="toggleCamera()">\ud83d\udcf7 Start Camera</button>
-      <button class="btn btn-s" onclick="triggerLoad('fileInput')">\ud83d\udcc1 Load Image</button>
-      <button class="btn btn-sq" onclick="clearAll()" title="Clear">\u2715</button>
+      <button class="btn btn-p" id="btnCam" onclick="toggleCamera()">Start Camera</button>
+      <button class="btn btn-s" id="btnLoad" onclick="document.getElementById('fileInput').click()">Load Image</button>
+      <button class="btn btn-sq" onclick="clearAll()">CLR</button>
     </div>
     <div class="sl-row">
       <label>Opacity</label>
-      <input type="range" min="5" max="100" value="65" oninput="setVal('opacity',this.value,'opV')">
-      <span class="sl-val" id="opV">65%</span>
+      <input type="range" id="slOpacity" min="5" max="100" value="65" oninput="onOpacity(this.value)">
+      <span class="sl-val" id="valOpacity">65%</span>
     </div>
     <div class="sl-row">
       <label>Size</label>
-      <input type="range" min="20" max="150" value="100" oninput="setVal('scale',this.value,'scV')">
-      <span class="sl-val" id="scV">100%</span>
+      <input type="range" id="slScale" min="20" max="150" value="100" oninput="onScale(this.value)">
+      <span class="sl-val" id="valScale">100%</span>
     </div>
-    <div class="status"><span class="dot" id="sDot"></span><span id="sMsg">Start camera \u2192 load image</span></div>
+    <div class="status">
+      <span class="dot" id="sDot"></span>
+      <span class="smsg" id="sMsg">Start camera, then load image</span>
+    </div>
   </div>
 
-  <!-- CROP TAB -->
   <div class="pane" id="paneCrop">
     <div class="sz-row">
       <label>Canvas</label>
-      <input type="number" id="canvasW" value="30" min="1" oninput="cropSizeChanged()">
-      <span>\u00d7</span>
-      <input type="number" id="canvasH" value="40" min="1" oninput="cropSizeChanged()">
+      <input type="number" id="canvasW" value="30" min="1" oninput="initCropBox()">
+      <span>x</span>
+      <input type="number" id="canvasH" value="40" min="1" oninput="initCropBox()">
       <span>cm</span>
     </div>
     <div class="row">
-      <button class="btn btn-p" onclick="triggerLoad('fileInputCrop')">\ud83d\udcc1 Load Image to Crop</button>
-      <button class="btn btn-s" id="btnApplyCrop" onclick="applyCrop()" style="display:none">\u2702\ufe0f Apply Crop</button>
+      <button class="btn btn-p" onclick="document.getElementById('fileInputCrop').click()">Load Image to Crop</button>
+      <button class="btn btn-s" id="btnApplyCrop" onclick="applyCrop()" style="display:none">Apply Crop</button>
     </div>
-    <div id="cropInfo" style="font-size:0.7rem;color:var(--muted);line-height:1.5;">Load an image, then drag the orange box to choose your crop area</div>
+    <div class="info" id="cropInfo">Load an image, then drag the orange box to select your crop area</div>
   </div>
 
-  <!-- PIN TAB -->
   <div class="pane" id="panePin">
     <div class="row">
-      <button class="btn btn-p" id="btnPinMode" onclick="togglePinMode()">\ud83d\udccc Tap 4 Canvas Corners</button>
-      <button class="btn btn-s" onclick="clearPins()">Reset Pins</button>
+      <button class="btn btn-p" id="btnPinMode" onclick="togglePinMode()">Tap 4 Canvas Corners</button>
+      <button class="btn btn-s" onclick="clearPins()">Reset</button>
     </div>
-    <div style="font-size:0.7rem;color:var(--muted);line-height:1.6;">
-      Tap each corner of your physical canvas on the camera view. The outline will lock to those corners and stay stable as you move.
+    <div class="info">Tap each corner of your physical canvas on the camera view. The outline locks and stays stable.</div>
+    <div class="status">
+      <span class="dot" id="pinDot"></span>
+      <span class="smsg" id="pinMsg">No corners set</span>
     </div>
-    <div class="status"><span class="dot" id="pinDot"></span><span id="pinMsg">No corners set</span></div>
   </div>
 
-  <!-- GRID TAB -->
   <div class="pane" id="paneGrid">
-    <div class="chips" id="gridStyleChips">
-      <span class="chip" data-g="equal"   onclick="toggleGrid(this)">Equal Grid</span>
-      <span class="chip" data-g="thirds"  onclick="toggleGrid(this)">Rule of Thirds</span>
-      <span class="chip" data-g="custom"  onclick="toggleGrid(this)">Custom</span>
+    <div class="chips">
+      <span class="chip" data-g="equal"  onclick="toggleGridStyle(this)">Equal Grid</span>
+      <span class="chip" data-g="thirds" onclick="toggleGridStyle(this)">Rule of Thirds</span>
+      <span class="chip" data-g="custom" onclick="toggleGridStyle(this)">Custom</span>
     </div>
     <div id="customGridRow" class="sz-row" style="display:none">
       <label>Rows</label>
       <input type="number" id="gridRows" value="4" min="1" max="20" oninput="redrawAll()">
-      <span>\u00d7</span>
+      <span>x</span>
       <input type="number" id="gridCols" value="4" min="1" max="20" oninput="redrawAll()">
       <label style="margin-left:4px">Cols</label>
     </div>
-    <div class="chips" style="margin-top:2px">
+    <div class="chips">
       <span class="chip on" data-v="outline" onclick="toggleVis(this)">Outline</span>
       <span class="chip on" data-v="grid"    onclick="toggleVis(this)">Grid Lines</span>
     </div>
     <div class="sl-row">
-      <label>Grid \u03b1</label>
-      <input type="range" min="5" max="100" value="40" oninput="setVal('gridOp',this.value,'gOpV')">
-      <span class="sl-val" id="gOpV">40%</span>
+      <label>Grid</label>
+      <input type="range" id="slGridOp" min="5" max="100" value="40" oninput="onGridOp(this.value)">
+      <span class="sl-val" id="valGridOp">40%</span>
     </div>
   </div>
 
-</div><!-- /panel -->
+</div>
 
-<input type="file" id="fileInput"     accept="image/*" onchange="loadImageAR(event)">
-<input type="file" id="fileInputCrop" accept="image/*" onchange="loadImageCrop(event)">
+<input type="file" id="fileInput"     accept="image/*">
+<input type="file" id="fileInputCrop" accept="image/*">
 
 <div id="httpsWarn">
   <h2>Camera Blocked</h2>
-  <p>You're opening this file locally.<br><strong>Chrome blocks camera for local files.</strong></p>
+  <p>You opened this file locally.<br><strong>Chrome blocks camera for local files.</strong><br>Use your GitHub Pages link instead.</p>
   <ol>
-    <li>Go to <span>github.com</span></li>
-    <li>Upload this file as <span>index.html</span></li>
-    <li>Enable <span>GitHub Pages</span></li>
+    <li>Upload as <span>index.html</span> to GitHub</li>
+    <li>Enable <span>GitHub Pages</span> in Settings</li>
     <li>Open the <span>https://</span> link</li>
   </ol>
-  <button style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:12px 24px;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;margin-top:6px" onclick="this.parentElement.style.display='none'">Continue Anyway</button>
+  <button onclick="document.getElementById('httpsWarn').style.display='none'"
+    style="margin-top:8px;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:12px 24px;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;">
+    Continue Anyway
+  </button>
 </div>
 
 <script>
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-//  STATE
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-const S = {
+// ============================================================
+// STATE
+// ============================================================
+var S = {
   tab: 'ar',
-  // camera
-  stream: null, camOn: false,
-  // images
-  refImg: null,       // original loaded image
-  croppedImg: null,   // after crop applied
-  // outline canvas (offscreen)
+  stream: null,
+  camOn: false,
+  refImg: null,
   outC: document.createElement('canvas'),
-  // AR
-  opacity: 0.65, scale: 1.0,
-  // pin
-  pins: [], pinMode: false,
-  // grid
-  gridStyle: null,   // 'equal','thirds','custom'
-  showOutline: true, showGrid: true,
+  opacity: 0.65,
+  scale: 1.0,
+  pins: [],
+  pinMode: false,
+  gridStyle: null,
+  showOutline: true,
+  showGrid: true,
   gridOp: 0.4,
-  // crop drag
-  cropBox: {x:0,y:0,w:0,h:0},
-  imgDisp: {x:0,y:0,w:0,h:0},
-  dragHandle: null, dragStart: null,
-  // anim
+  cropBox: { x:0, y:0, w:0, h:0 },
+  imgDisp: { x:0, y:0, w:0, h:0 },
   raf: null
 };
 
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-//  DOM REFS
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-const video    = document.getElementById('cameraFeed');
-const mainC    = document.getElementById('mainCanvas');
-const ctx      = mainC.getContext('2d');
-const cropCanv = document.getElementById('cropCanvas');
-const cropCtx  = cropCanv.getContext('2d');
-const cropUI   = document.getElementById('cropUI');
-const cropImgEl= document.getElementById('cropImg');
-const cropBoxEl= document.getElementById('cropBox');
-const ph       = document.getElementById('placeholder');
-const pinHint  = document.getElementById('pinHint');
-const btnCam   = document.getElementById('btnCam');
+// ============================================================
+// DOM
+// ============================================================
+var video     = document.getElementById('cameraFeed');
+var mainC     = document.getElementById('mainCanvas');
+var ctx       = mainC.getContext('2d');
+var cropUI    = document.getElementById('cropUI');
+var cropImgEl = document.getElementById('cropImgEl');
+var cropBoxEl = document.getElementById('cropBoxEl');
+var ph        = document.getElementById('placeholder');
+var pinHint   = document.getElementById('pinHint');
+var btnCam    = document.getElementById('btnCam');
 
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-//  TABS
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// ============================================================
+// FILE INPUTS
+// ============================================================
+document.getElementById('fileInput').addEventListener('change', function(ev) {
+  var f = ev.target.files[0];
+  if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      S.refImg = img;
+      buildOutline(img);
+      ph.style.display = 'none';
+      if (S.camOn) {
+        startLoop();
+        setStatus('Image loaded - outline active', 'g');
+      } else {
+        redrawAll();
+        setStatus('Image ready - tap Start Camera', 'o');
+      }
+    };
+    img.src = e.target.result;
+  };
+  r.readAsDataURL(f);
+  ev.target.value = '';
+});
+
+document.getElementById('fileInputCrop').addEventListener('change', function(ev) {
+  var f = ev.target.files[0];
+  if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    cropImgEl.onload = function() {
+      initCropBox();
+      document.getElementById('btnApplyCrop').style.display = 'flex';
+      document.getElementById('cropInfo').textContent = 'Drag corners to select crop area, then tap Apply Crop';
+    };
+    cropImgEl.src = e.target.result;
+  };
+  r.readAsDataURL(f);
+  ev.target.value = '';
+});
+
+// ============================================================
+// TABS
+// ============================================================
 function setTab(t) {
   S.tab = t;
-  ['ar','crop','pin','grid'].forEach(id=>{
-    document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('active', id===t);
-    document.getElementById('pane'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('active', id===t);
-  });
-  // show/hide cropUI
-  cropUI.style.display = t==='crop' ? 'block' : 'none';
-  cropCanv.style.display = 'none';
-  pinHint.style.display = 'none';
-  S.pinMode = false;
-  document.getElementById('btnPinMode').classList.remove('on');
+  var ids = ['ar','crop','pin','grid'];
+  for (var i = 0; i < ids.length; i++) {
+    var id = ids[i];
+    var cap = id.charAt(0).toUpperCase() + id.slice(1);
+    var tb = document.getElementById('tab' + cap);
+    var pn = document.getElementById('pane' + cap);
+    if (tb) { if (id === t) tb.classList.add('active'); else tb.classList.remove('active'); }
+    if (pn) { if (id === t) pn.classList.add('active'); else pn.classList.remove('active'); }
+  }
+  cropUI.style.display = (t === 'crop') ? 'block' : 'none';
+  if (S.pinMode) {
+    S.pinMode = false;
+    var bpm = document.getElementById('btnPinMode');
+    if (bpm) bpm.classList.remove('on');
+    mainC.style.cursor = 'default';
+    pinHint.style.display = 'none';
+  }
   redrawAll();
 }
 
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-//  CAMERA
-// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-async function toggleCamera() {
-  if (S.camOn) { stopCamera(); } else { await startCamera(); }
+// ============================================================
+// CAMERA
+// ============================================================
+function toggleCamera() {
+  if (S.camOn) stopCamera(); else startCamera();
 }
-async function startCamera() {
-  if (!navigator.mediaDevices?.getUserMedia) { setStatus('Camera not supported',''); return; }
-  setStatus('Requesting permission\u2026','o');
-  try {
-    S.stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:{ideal:'environment'} }
+
+function startCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setStatus('Camera not supported in this browser', '');
+    return;
+  }
+  setStatus('Requesting camera permission...', 'o');
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } })
+    .then(function(stream) {
+      S.stream = stream;
+      video.srcObject = stream;
+      video.setAttribute('playsinline', 'true');
+      video.muted = true;
+      video.play().catch(function() {});
+      S.camOn = true;
+      btnCam.textContent = 'Stop Camera';
+      btnCam.classList.add('on');
+      ph.style.display = 'none';
+      if (S.refImg && S.outC.width) {
+        setStatus('Camera on - outline active', 'g');
+        if (video.readyState >= 2) startLoop();
+        else video.addEventListener('canplay', startLoop, { once: true });
+      } else {
+        setStatus('Camera on - load an image', 'g');
+        video.addEventListener('canplay', function() {}, { once: true });
+      }
+    })
+    .catch(function(e) {
+      var msg = e.name === 'NotAllowedError'  ? 'Permission denied - check browser settings' :
+                e.name === 'NotFoundError'    ? 'No camera found' :
+                e.name === 'NotReadableError' ? 'Camera busy - close other apps' :
+                (e.message || 'Unknown error');
+      setStatus('Error: ' + msg, '');
     });
-    video.srcObject = S.stream;
-    video.setAttribute('playsinline','true');
-    video.muted = true;
-    await video.play().catch(()=>{});
-    S.camOn = true;
-    btnCam.textContent = '\ud83d\udd34 Stop Camera';
-    btnCam.classList.add('on');
-    ph.style.display = 'none';
-    setStatus('Camera on
+}
+
+function stopCamera() {
+  cancelAnimationFrame(S.raf);
+  if (S.stream) { S.stream.getTracks().forEach(function(t) { t.stop(); }); S.stream = null; }
+  video.srcObject = null;
+  S.camOn = false;
+  btnCam.textContent = 'Start Camera';
+  btnCam.classList.remove('on');
+  ctx.clearRect(0, 0, mainC.width, mainC.height);
+  setStatus('Camera stopped', '');
+}
+
+// ============================================================
+// SOBEL OUTLINE
+// ============================================================
+function buildOutline(img) {
+  var oc = S.outC;
+  var octx = oc.getContext('2d');
+  oc.width = img.width;
+  oc.height = img.height;
+  octx.drawImage(img, 0, 0);
+  var src = octx.getImageData(0, 0, oc.width, oc.height);
+  var dst = octx.createImageData(oc.width, oc.height);
+  var d = src.data, o = dst.data;
+  var W = oc.width, H = oc.height;
+  function gv(x, y) { var idx = (y*W+x)*4; return 0.299*d[idx]+0.587*d[idx+1]+0.114*d[idx+2]; }
+  for (var y = 1; y < H-1; y++) {
+    for (var x = 1; x < W-1; x++) {
+      var gx = -gv(x-1,y-1)-2*gv(x-1,y)-gv(x-1,y+1)+gv(x+1,y-1)+2*gv(x+1,y)+gv(x+1,y+1);
+      var gy = -gv(x-1,y-1)-2*gv(x,y-1)-gv(x+1,y-1)+gv(x-1,y+1)+2*gv(x,y+1)+gv(x+1,y+1);
+      var mag = Math.min(255, Math.sqrt(gx*gx+gy*gy)*1.5);
+      var idx2 = (y*W+x)*4;
+      o[idx2]=255; o[idx2+1]=255; o[idx2+2]=255;
+      o[idx2+3] = mag > 22 ? Math.min(255, mag*1.7) : 0;
+    }
+  }
+  octx.putImageData(dst, 0, 0);
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function startLoop() {
+  cancelAnimationFrame(S.raf);
+  function loop() { redrawAll(); S.raf = requestAnimationFrame(loop); }
+  loop();
+}
+
+function redrawAll() {
+  var vw = mainC.offsetWidth, vh = mainC.offsetHeight;
+  mainC.width = vw; mainC.height = vh;
+  ctx.clearRect(0, 0, vw, vh);
+  if (!S.refImg || !S.outC.width) return;
+
+  var ar = S.outC.width / S.outC.height;
+  var bw, bh;
+  if (ar > vw/vh) { bw = vw * S.scale; bh = bw / ar; }
+  else            { bh = vh * S.scale; bw = bh * ar; }
+
+  if (S.pins.length === 4) {
+    drawPinned(vw, vh, bw, bh);
+  } else {
+    var bx = (vw-bw)/2, by = (vh-bh)/2;
+    drawRect(bx, by, bw, bh);
+  }
+}
+
+function drawRect(bx, by, bw, bh) {
+  if (S.showOutline && S.outC.width) {
+    ctx.globalAlpha = S.opacity;
+    ctx.drawImage(S.outC, bx, by, bw, bh);
+    ctx.globalAlpha = 1;
+  }
+  if (S.gridStyle && S.showGrid) drawGrid(bx, by, bw, bh);
+  drawPinDots();
+}
+
+function drawPinned(vw, vh, bw, bh) {
+  var tmp = document.createElement('canvas');
+  tmp.width = vw; tmp.height = vh;
+  var tc = tmp.getContext('2d');
+  var p = S.pins;
+  if (S.showOutline && S.outC.width) {
+    tc.globalAlpha = S.opacity;
+    perspectiveDraw(tc, S.outC, p, bw, bh);
+    tc.globalAlpha = 1;
+  }
+  ctx.drawImage(tmp, 0, 0);
+  if (S.gridStyle && S.showGrid) drawGridPinned(p);
+  drawPinDots();
+}
+
+function perspectiveDraw(tc, src, p, sw, sh) {
+  drawTri(tc,src, 0,0,sw,0,0,sh, p[0].x,p[0].y,p[1].x,p[1].y,p[2].x,p[2].y);
+  drawTri(tc,src, sw,0,0,sh,sw,sh, p[1].x,p[1].y,p[2].x,p[2].y,p[3].x,p[3].y);
+}
+
+function drawTri(tc,img, sx1,sy1,sx2,sy2,sx3,sy3, dx1,dy1,dx2,dy2,dx3,dy3) {
+  tc.save();
+  tc.beginPath(); tc.moveTo(dx1,dy1); tc.lineTo(dx2,dy2); tc.lineTo(dx3,dy3); tc.closePath(); tc.clip();
+  var denom = sy1*(sx3-sx2)+sy2*(sx1-sx3)+sy3*(sx2-sx1);
+  if (Math.abs(denom) < 0.001) { tc.restore(); return; }
+  var a  = ((dy1-dy3)*(sx2-sx3)-(dy2-dy3)*(sx1-sx3)) / denom;
+  var b  = ((dy1-dy3)*(sy2-sy3)-(dy2-dy3)*(sy1-sy3)) / (-denom);
+  var c  = dy1 - a*sx1 - b*sy1;
+  var d2 = ((dx1-dx3)*(sx2-sx3)-(dx2-dx3)*(sx1-sx3)) / denom;
+  var e  = ((dx1-dx3)*(sy2-sy3)-(dx2-dx3)*(sy1-sy3)) / (-denom);
+  var f  = dx1 - d2*sx1 - e*sy1;
+  var W  = img.width, H = img.height;
+  tc.transform(d2/W, a/H, e/W, b/H, f, c);
+  tc.drawImage(img, 0, 0);
+  tc.restore();
+}
+
+function drawPinDots() {
+  for (var i = 0; i < S.pins.length; i++) {
+    var p = S.pins[i];
+    ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(232,66,10,0.85)'; ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(i+1, p.x, p.y);
+  }
+}
+
+function drawGrid(bx, by, bw, bh) {
+  ctx.save();
+  ctx.globalAlpha = S.gridOp;
+  ctx.strokeStyle = 'rgba(245,240,232,0.9)';
+  ctx.lineWidth = 1;
+  var rows = 3, cols = 3;
+  if (S.gridStyle === 'equal') { rows = 4; cols = 4; }
+  else if (S.gridStyle === 'custom') {
+    rows = parseInt(document.getElementById('gridRows').value) || 4;
+    cols = parseInt(document.getElementById('gridCols').value) || 4;
+  }
+  for (var i = 1; i < cols; i++) {
+    var x = bx + bw*i/cols;
+    ctx.beginPath(); ctx.moveTo(x,by); ctx.lineTo(x,by+bh); ctx.stroke();
+  }
+  for (var j = 1; j < rows; j++) {
+    var y = by + bh*j/rows;
+    ctx.beginPath(); ctx.moveTo(bx,y); ctx.lineTo(bx+bw,y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawGridPinned(p) {
+  ctx.save();
+  ctx.globalAlpha = S.gridOp;
+  ctx.strokeStyle = 'rgba(245,240,232,0.9)';
+  ctx.lineWidth = 1;
+  var rows = 3, cols = 3;
+  if (S.gridStyle === 'equal')  { rows = 4; cols = 4; }
+  if (S.gridStyle === 'custom') {
+    rows = parseInt(document.getElementById('gridRows').value) || 4;
+    cols = parseInt(document.getElementById('gridCols').value) || 4;
+  }
+  function lp(a,b,t){ return { x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t }; }
+  for (var i = 1; i < cols; i++) {
+    var t = i/cols;
+    var s = lp(p[0],p[1],t), en = lp(p[2],p[3],t);
+    ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(en.x,en.y); ctx.stroke();
+  }
+  for (var j = 1; j < rows; j++) {
+    var t2 = j/rows;
+    var s2 = lp(p[0],p[2],t2), en2 = lp(p[1],p[3],t2);
+    ctx.beginPath(); ctx.moveTo(s2.x,s2.y); ctx.lineTo(en2.x,en2.y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ============================================================
+// CROP
+// ============================================================
+function initCropBox() {
+  if (!cropImgEl.naturalWidth) return;
+  var vw = cropUI.offsetWidth, vh = cropUI.offsetHeight;
+  var iw = cropImgEl.naturalWidth, ih = cropImgEl.naturalHeight;
+  var cw = parseFloat(document.getElementById('canvasW').value) || 30;
+  var ch = parseFloat(document.getElementById('canvasH').value) || 40;
+  var canvasAR = cw / ch;
+  var dw, dh;
+  if (iw/ih > vw/vh) { dw = vw; dh = vw/(iw/ih); }
+  else               { dh = vh; dw = vh*(iw/ih); }
+  var dx = (vw-dw)/2, dy = (vh-dh)/2;
+  S.imgDisp = { x:dx, y:dy, w:dw, h:dh };
+  cropImgEl.style.left   = dx + 'px';
+  cropImgEl.style.top    = dy + 'px';
+  cropImgEl.style.width  = dw + 'px';
+  cropImgEl.style.height = dh + 'px';
+  var bw, bh;
+  if (canvasAR > dw/dh) { bw = dw*0.88; bh = bw/canvasAR; }
+  else                  { bh = dh*0.88; bw = bh*canvasAR; }
+  S.cropBox = { x:dx+(dw-bw)/2, y:dy+(dh-bh)/2, w:bw, h:bh };
+  updateCropBoxEl();
+}
+
+function updateCropBoxEl() {
+  var b = S.cropBox;
+  cropBoxEl.style.left   = b.x + 'px';
+  cropBoxEl.style.top    = b.y + 'px';
+  cropBoxEl.style.width  = b.w + 'px';
+  cropBoxEl.style.height = b.h + 'px';
+}
+
+var _cd = null;
+function evXY(e) {
+  var src = e.touches ? e.touches[0] : e;
+  return { x: src.clientX, y: src.clientY };
+}
+
+cropBoxEl.addEventListener('pointerdown', function(e) {
+  var h = (e.target && e.target.dataset) ? e.target.dataset.h : null;
+  var pt = evXY(e);
+  _cd = { type: h ? 'handle' : 'move', h: h||'', x: pt.x, y: pt.y,
+          box: { x:S.cropBox.x, y:S.cropBox.y, w:S.cropBox.w, h:S.cropBox.h } };
+  e.stopPropagation(); e.preventDefault();
+});
+
+document.addEventListener('pointermove', function(e) {
+  if (!_cd) return;
+  var pt = evXY(e);
+  var ddx = pt.x - _cd.x, ddy = pt.y - _cd.y;
+  var b = { x:_cd.box.x, y:_cd.box.y, w:_cd.box.w, h:_cd.box.h };
+  var img = S.imgDisp;
+  var cw = parseFloat(document.getElementById('canvasW').value) || 30;
+  var ch = parseFloat(document.getElementById('canvasH').value) || 40;
+  var ar = cw / ch;
+
+  if (_cd.type === 'move') {
+    b.x = Math.max(img.x, Math.min(img.x+img.w-b.w, _cd.box.x+ddx));
+    b.y = Math.max(img.y, Math.min(img.y+img.h-b.h, _cd.box.y+ddy));
+  } else {
+    var ob = _cd.box, hh = _cd.h;
+    if (hh==='br'){ b.w=Math.max(40,ob.w+ddx); b.h=b.w/ar; }
+    else if(hh==='bl'){ b.w=Math.max(40,ob.w-ddx); b.h=b.w/ar; b.x=ob.x+ob.w-b.w; }
+    else if(hh==='tr'){ b.w=Math.max(40,ob.w+ddx); b.h=b.w/ar; b.y=ob.y+ob.h-b.h; }
+    else if(hh==='tl'){ b.w=Math.max(40,ob.w-ddx); b.h=b.w/ar; b.x=ob.x+ob.w-b.w; b.y=ob.y+ob.h-b.h; }
+    b.x = Math.max(img.x, b.x);
+    b.y = Math.max(img.y, b.y);
+    if (b.x+b.w > img.x+img.w) b.w = img.x+img.w-b.x;
+    if (b.y+b.h > img.y+img.h) b.h = img.y+img.h-b.y;
+  }
+  S.cropBox = b;
+  updateCropBoxEl();
+});
+
+document.addEventListener('pointerup',     function(){ _cd = null; });
+document.addEventListener('pointercancel', function(){ _cd = null; });
+
+function applyCrop() {
+  if (!cropImgEl.naturalWidth) return;
+  var img = S.imgDisp, b = S.cropBox;
+  var scaleX = cropImgEl.naturalWidth  / img.w;
+  var scaleY = cropImgEl.naturalHeight / img.h;
+  var sx = Math.round((b.x-img.x)*scaleX);
+  var sy = Math.round((b.y-img.y)*scaleY);
+  var sw = Math.round(b.w*scaleX);
+  var sh = Math.round(b.h*scaleY);
+  var tmp = document.createElement('canvas');
+  tmp.width = sw; tmp.height = sh;
+  tmp.getContext('2d').drawImage(cropImgEl, sx, sy, sw, sh, 0, 0, sw, sh);
+  var cropped = new Image();
+  cropped.onload = function() {
+    S.refImg = cropped;
+    buildOutline(cropped);
+    cropUI.style.display = 'none';
+    setTab('ar');
+    if (S.camOn) { startLoop(); setStatus('Cropped image active', 'g'); }
+    else { redrawAll(); setStatus('Crop applied - tap Start Camera', 'o'); }
+  };
+  cropped.src = tmp.toDataURL();
+}
+
+// ============================================================
+// PIN
+// ============================================================
+function togglePinMode() {
+  S.pinMode = !S.pinMode;
+  var btn = document.getElementById('btnPinMode');
+  if (S.pinMode) btn.classList.add('on'); else btn.classList.remove('on');
+  pinHint.style.display = S.pinMode ? 'block' : 'none';
+  pinHint.textContent = S.pins.length < 4 ? 'Tap corner ' + (S.pins.length+1) + ' of 4' : 'All corners set';
+  mainC.style.cursor = S.pinMode ? 'crosshair' : 'default';
+}
+
+mainC.addEventListener('click', function(e) {
+  if (!S.pinMode) return;
+  var r = mainC.getBoundingClientRect();
+  var x = (e.clientX-r.left) * (mainC.width/r.width);
+  var y = (e.clientY-r.top)  * (mainC.height/r.height);
+  if (S.pins.length < 4) {
+    S.pins.push({ x:x, y:y });
+    if (S.pins.length === 4) {
+      S.pinMode = false;
+      document.getElementById('btnPinMode').classList.remove('on');
+      mainC.style.cursor = 'default';
+      pinHint.style.display = 'none';
+      document.getElementById('pinMsg').textContent = '4 corners locked';
+      document.getElementById('pinDot').className = 'dot g';
+    } else {
+      pinHint.textContent = 'Tap corner ' + (S.pins.length+1) + ' of 4';
+      document.getElementById('pinMsg').textContent = S.pins.length + ' of 4 tapped';
+    }
+    redrawAll();
+  }
+});
+
+function clearPins() {
+  S.pins = [];
+  document.getElementById('pinMsg').textContent = 'No corners set';
+  document.getElementById('pinDot').className = 'dot';
+  redrawAll();
+}
+
+// ============================================================
+// GRID
+// ============================================================
+function toggleGridStyle(el) {
+  var g = el.dataset.g;
+  var wasOn = el.classList.contains('on');
+  var chips = document.querySelectorAll('[data-g]');
+  for (var i = 0; i < chips.length; i++) chips[i].classList.remove('on');
+  if (!wasOn) { el.classList.add('on'); S.gridStyle = g; }
+  else S.gridStyle = null;
+  document.getElementById('customGridRow').style.display = (S.gridStyle === 'custom') ? 'flex' : 'none';
+  redrawAll();
+}
+
+function toggleVis(el) {
+  el.classList.toggle('on');
+  var ov = document.querySelector('[data-v="outline"]');
+  var gv2 = document.querySelector('[data-v="grid"]');
+  S.showOutline = ov ? ov.classList.contains('on') : true;
+  S.showGrid    = gv2 ? gv2.classList.contains('on') : true;
+  redrawAll();
+}
+
+// ============================================================
+// SLIDER HANDLERS
+// ============================================================
+function onOpacity(v) {
+  S.opacity = v/100;
+  document.getElementById('valOpacity').textContent = v + '%';
+  redrawAll();
+}
+function onScale(v) {
+  S.scale = v/100;
+  document.getElementById('valScale').textContent = v + '%';
+  redrawAll();
+}
+function onGridOp(v) {
+  S.gridOp = v/100;
+  document.getElementById('valGridOp').textContent = v + '%';
+  redrawAll();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function clearAll() {
+  S.refImg = null;
+  S.outC.width = 0;
+  cancelAnimationFrame(S.raf);
+  ctx.clearRect(0, 0, mainC.width, mainC.height);
+  cropUI.style.display = 'none';
+  cropImgEl.src = '';
+  document.getElementById('btnApplyCrop').style.display = 'none';
+  document.getElementById('cropInfo').textContent = 'Load an image, then drag the orange box to select your crop area';
+  if (!S.camOn) ph.style.display = 'flex';
+  setStatus(S.camOn ? 'Camera on - load image' : 'Start camera, then load image', S.camOn ? 'g' : '');
+}
+
+function setStatus(m, c) {
+  document.getElementById('sMsg').textContent = m;
+  var dot = document.getElementById('sDot');
+  dot.className = 'dot' + (c ? ' '+c : '');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+setTab('ar');
+window.addEventListener('resize', function() { redrawAll(); });
+if (location.protocol === 'file:') {
+  document.getElementById('httpsWarn').style.display = 'flex';
+}
+</script>
+</body>
+</html>
