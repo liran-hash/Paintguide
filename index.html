@@ -5,636 +5,313 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>PaintGuide AR</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
 
-  :root {
-    --ink: #0d0d0d;
-    --paper: #f5f0e8;
-    --accent: #e8420a;
-    --muted: #8a8070;
-    --glass: rgba(245,240,232,0.12);
-    --shadow: rgba(13,13,13,0.6);
-  }
+:root {
+  --ink:#0d0d0d; --paper:#f5f0e8; --accent:#e8420a;
+  --muted:#8a8070; --glass:rgba(245,240,232,0.1);
+  --panel:rgba(13,13,13,0.95);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--ink);color:var(--paper);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;height:100dvh;}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;flex-shrink:0;z-index:30;background:var(--ink);}
+header h1{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:2px;}
+header h1 span{color:var(--accent);}
+.tabs{display:flex;background:rgba(245,240,232,0.08);border:1px solid rgba(245,240,232,0.15);border-radius:20px;overflow:hidden;}
+.tabs button{background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.68rem;font-weight:500;padding:6px 12px;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.2s;white-space:nowrap;}
+.tabs button.active{background:var(--accent);color:#fff;border-radius:18px;}
 
-  body {
-    background: var(--ink);
-    color: var(--paper);
-    font-family: 'DM Sans', sans-serif;
-    height: 100dvh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
+/* VIEWPORT */
+.viewport{position:relative;flex:1;overflow:hidden;background:#0a0a0a;min-height:0;}
+#cameraFeed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+#mainCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;}
+#cropCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;display:none;touch-action:none;}
 
-  /* ── HEADER ── */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px 10px;
-    background: linear-gradient(to bottom, #0d0d0d, transparent);
-    position: relative;
-    z-index: 20;
-    flex-shrink: 0;
-  }
-  header h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.7rem;
-    letter-spacing: 2px;
-    color: var(--paper);
-  }
-  header h1 span { color: var(--accent); }
+.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);z-index:1;text-align:center;padding:24px;pointer-events:none;}
+.ph svg{opacity:0.2;}
+.ph p{font-size:0.82rem;line-height:1.65;}
+.ph strong{color:var(--paper);}
 
-  .mode-pill {
-    background: var(--glass);
-    border: 1px solid rgba(245,240,232,0.2);
-    border-radius: 20px;
-    display: flex;
-    overflow: hidden;
-    backdrop-filter: blur(6px);
-  }
-  .mode-pill button {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 500;
-    padding: 6px 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-  .mode-pill button.active {
-    background: var(--accent);
-    color: white;
-    border-radius: 18px;
-  }
+/* BOTTOM PANEL */
+.panel{background:var(--ink);border-top:1px solid rgba(245,240,232,0.07);padding:12px 16px 20px;flex-shrink:0;z-index:30;}
+.pane{display:none;flex-direction:column;gap:9px;}
+.pane.active{display:flex;}
+.row{display:flex;gap:8px;align-items:center;}
 
-  /* ── MAIN CANVAS AREA ── */
-  .viewport {
-    position: relative;
-    flex: 1;
-    overflow: hidden;
-    background: #111;
-  }
+/* BUTTONS */
+.btn{border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.8rem;padding:11px 14px;cursor:pointer;transition:transform 0.15s,background 0.15s;letter-spacing:0.2px;white-space:nowrap;}
+.btn:active{transform:scale(0.96);}
+.btn-p{background:var(--accent);color:#fff;flex:1;}
+.btn-s{background:rgba(245,240,232,0.08);color:var(--paper);border:1px solid rgba(245,240,232,0.12);flex:1;}
+.btn-s.on{background:rgba(232,66,10,0.18);border-color:var(--accent);color:var(--accent);}
+.btn-sq{background:rgba(245,240,232,0.08);color:var(--paper);border:1px solid rgba(245,240,232,0.12);width:44px;height:44px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:1rem;flex-shrink:0;}
 
-  #cameraFeed {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
+/* SLIDERS */
+.sl-row{display:flex;align-items:center;gap:8px;}
+.sl-row label{font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);width:52px;flex-shrink:0;}
+.sl-row input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:rgba(245,240,232,0.18);border-radius:2px;outline:none;}
+.sl-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.sl-val{font-size:0.7rem;color:var(--paper);width:34px;text-align:right;flex-shrink:0;}
 
-  #overlayCanvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
+/* TOGGLE CHIPS */
+.chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:rgba(245,240,232,0.07);border:1px solid rgba(245,240,232,0.12);border-radius:7px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.72rem;padding:6px 11px;cursor:pointer;transition:all 0.18s;}
+.chip.on{background:rgba(232,66,10,0.2);border-color:var(--accent);color:var(--paper);}
 
-  /* crop frame overlay */
-  #cropFrame {
-    position: absolute;
-    border: 2px solid var(--accent);
-    box-shadow: 0 0 0 9999px rgba(13,13,13,0.55);
-    pointer-events: none;
-    display: none;
-    transition: all 0.3s ease;
-  }
-  #cropFrame::before, #cropFrame::after {
-    content: '';
-    position: absolute;
-    background: var(--accent);
-  }
-  /* corner ticks */
-  .crop-corner {
-    position: absolute;
-    width: 16px; height: 16px;
-    border-color: var(--accent);
-    border-style: solid;
-  }
-  .crop-corner.tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; }
-  .crop-corner.tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; }
-  .crop-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; }
-  .crop-corner.br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; }
+/* SIZE INPUTS */
+.sz-row{display:flex;align-items:center;gap:7px;background:rgba(245,240,232,0.05);border:1px solid rgba(245,240,232,0.1);border-radius:9px;padding:9px 13px;}
+.sz-row label{font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);white-space:nowrap;}
+.sz-row input{background:none;border:none;border-bottom:1px solid rgba(245,240,232,0.22);color:var(--paper);font-family:'DM Sans',sans-serif;font-size:0.88rem;width:48px;text-align:center;outline:none;padding:2px 3px;}
+.sz-row span{color:var(--muted);font-size:0.72rem;}
 
-  /* placeholder state */
-  .placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    color: var(--muted);
-    background: #111;
-  }
-  .placeholder svg { opacity: 0.3; }
-  .placeholder p { font-size: 0.85rem; letter-spacing: 0.3px; }
+/* STATUS */
+.status{display:flex;align-items:center;gap:6px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all 0.3s;}
+.dot.g{background:#4caf50;box-shadow:0 0 5px #4caf50;}
+.dot.o{background:#ff9800;box-shadow:0 0 5px #ff9800;}
+#sMsg{font-size:0.7rem;color:var(--muted);}
 
-  /* opacity slider */
-  .opacity-row {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    padding: 10px 18px 14px;
-    background: linear-gradient(to top, rgba(13,13,13,0.85), transparent);
-    display: none;
-    align-items: center;
-    gap: 10px;
-    z-index: 10;
-  }
-  .opacity-row label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-  .opacity-row input[type=range] {
-    flex: 1;
-    -webkit-appearance: none;
-    height: 3px;
-    background: rgba(245,240,232,0.25);
-    border-radius: 2px;
-    outline: none;
-  }
-  .opacity-row input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 18px; height: 18px;
-    border-radius: 50%;
-    background: var(--accent);
-    cursor: pointer;
-  }
-  .opacity-val {
-    font-size: 0.72rem;
-    color: var(--paper);
-    width: 30px;
-    text-align: right;
-  }
+/* CANVAS PIN MODE overlay instruction */
+#pinHint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(13,13,13,0.82);border:1px solid var(--accent);border-radius:8px;padding:7px 14px;font-size:0.75rem;color:var(--paper);z-index:10;pointer-events:none;white-space:nowrap;display:none;}
 
-  /* ── BOTTOM PANEL ── */
-  .bottom-panel {
-    background: var(--ink);
-    border-top: 1px solid rgba(245,240,232,0.08);
-    padding: 14px 18px 20px;
-    flex-shrink: 0;
-    z-index: 20;
-  }
+/* CROP UI inside viewport */
+#cropUI{position:absolute;inset:0;z-index:5;display:none;}
+#cropImg{position:absolute;transform-origin:top left;}
+#cropBox{position:absolute;border:2px solid var(--accent);box-shadow:0 0 0 9999px rgba(13,13,13,0.55);touch-action:none;}
+.cc{position:absolute;width:22px;height:22px;border-color:var(--accent);border-style:solid;touch-action:none;}
+.cc.tl{top:-2px;left:-2px;border-width:3px 0 0 3px;}
+.cc.tr{top:-2px;right:-2px;border-width:3px 3px 0 0;}
+.cc.bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;}
+.cc.br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;}
 
-  /* AR mode controls */
-  #arControls { display: flex; flex-direction: column; gap: 12px; }
-  #cropControls { display: none; flex-direction: column; gap: 12px; }
-
-  .action-row {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .btn {
-    border: none;
-    border-radius: 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 500;
-    font-size: 0.82rem;
-    padding: 11px 18px;
-    cursor: pointer;
-    transition: all 0.18s;
-    letter-spacing: 0.3px;
-  }
-  .btn-primary {
-    background: var(--accent);
-    color: white;
-    flex: 1;
-  }
-  .btn-primary:active { transform: scale(0.97); background: #c93508; }
-  .btn-secondary {
-    background: rgba(245,240,232,0.08);
-    color: var(--paper);
-    border: 1px solid rgba(245,240,232,0.12);
-    flex: 1;
-  }
-  .btn-secondary:active { transform: scale(0.97); }
-  .btn-icon {
-    background: rgba(245,240,232,0.08);
-    color: var(--paper);
-    border: 1px solid rgba(245,240,232,0.12);
-    width: 44px; height: 44px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 10px;
-    padding: 0;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-  }
-
-  /* canvas size input row */
-  .size-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(245,240,232,0.05);
-    border: 1px solid rgba(245,240,232,0.1);
-    border-radius: 10px;
-    padding: 10px 14px;
-  }
-  .size-row label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-  .size-row input {
-    background: none;
-    border: none;
-    border-bottom: 1px solid rgba(245,240,232,0.2);
-    color: var(--paper);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    width: 52px;
-    text-align: center;
-    outline: none;
-    padding: 2px 4px;
-  }
-  .size-row span { color: var(--muted); font-size: 0.75rem; }
-
-  .info-label {
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.4;
-  }
-  .info-label strong { color: var(--paper); }
-
-  /* status badge */
-  .status-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--muted);
-    display: inline-block;
-    margin-right: 5px;
-    transition: background 0.3s;
-  }
-  .status-dot.active { background: #4caf50; box-shadow: 0 0 6px #4caf50; }
-
-  #statusText {
-    font-size: 0.72rem;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-  }
-
-  /* hidden file input */
-  #fileInput { display: none; }
+/* HTTPS warning */
+#httpsWarn{display:none;position:fixed;inset:0;z-index:999;background:rgba(13,13,13,0.97);flex-direction:column;align-items:center;justify-content:center;padding:26px;text-align:center;gap:14px;}
+#httpsWarn h2{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--accent);letter-spacing:2px;}
+#httpsWarn p{font-size:0.82rem;line-height:1.7;color:var(--muted);max-width:300px;}
+#httpsWarn p strong{color:var(--paper);}
+#httpsWarn ol{text-align:left;font-size:0.8rem;color:var(--paper);line-height:2;padding-left:20px;max-width:300px;}
+#httpsWarn ol span{color:var(--accent);}
+#fileInput{display:none;}
+#fileInputCrop{display:none;}
 </style>
 </head>
 <body>
 
 <header>
   <h1>Paint<span>Guide</span></h1>
-  <div class="mode-pill">
-    <button class="active" id="btnAR" onclick="setMode('ar')">AR Outline</button>
-    <button id="btnCrop" onclick="setMode('crop')">Crop Guide</button>
+  <div class="tabs">
+    <button id="tabAR"   class="active" onclick="setTab('ar')">AR</button>
+    <button id="tabCrop" onclick="setTab('crop')">Crop</button>
+    <button id="tabPin"  onclick="setTab('pin')">Pin</button>
+    <button id="tabGrid" onclick="setTab('grid')">Grid</button>
   </div>
 </header>
 
 <div class="viewport">
   <video id="cameraFeed" autoplay playsinline muted></video>
-  <canvas id="overlayCanvas"></canvas>
-  <div id="cropFrame">
-    <div class="crop-corner tl"></div>
-    <div class="crop-corner tr"></div>
-    <div class="crop-corner bl"></div>
-    <div class="crop-corner br"></div>
+  <canvas id="mainCanvas"></canvas>
+  <canvas id="cropCanvas"></canvas>
+
+  <!-- Crop UI -->
+  <div id="cropUI">
+    <img id="cropImg" draggable="false">
+    <div id="cropBox">
+      <div class="cc tl" data-h="tl"></div>
+      <div class="cc tr" data-h="tr"></div>
+      <div class="cc bl" data-h="bl"></div>
+      <div class="cc br" data-h="br"></div>
+    </div>
   </div>
-  <div class="opacity-row" id="opacityRow">
-    <label>Outline</label>
-    <input type="range" id="opacitySlider" min="10" max="100" value="60" oninput="updateOpacity(this.value)">
-    <span class="opacity-val" id="opacityVal">60%</span>
-  </div>
-  <div class="placeholder" id="placeholder">
-    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+
+  <div id="pinHint"></div>
+
+  <div class="ph" id="placeholder">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1">
       <rect x="3" y="3" width="18" height="18" rx="2"/>
       <circle cx="8.5" cy="8.5" r="1.5"/>
       <path d="m21 15-5-5L5 21"/>
     </svg>
-    <p>Load an image to begin</p>
+    <p>Tap <strong>\ud83d\udcf7 Start Camera</strong> then<br><strong>\ud83d\udcc1 Load Image</strong> to begin</p>
   </div>
 </div>
 
-<div class="bottom-panel">
+<!-- BOTTOM PANELS -->
+<div class="panel">
 
-  <!-- AR MODE -->
-  <div id="arControls">
-    <div class="action-row">
-      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">📁 Load Image</button>
-      <button class="btn btn-secondary" id="btnCam" onclick="toggleCamera()">📷 Start Camera</button>
+  <!-- AR TAB -->
+  <div class="pane active" id="paneAR">
+    <div class="row">
+      <button class="btn btn-p" id="btnCam" onclick="toggleCamera()">\ud83d\udcf7 Start Camera</button>
+      <button class="btn btn-s" onclick="triggerLoad('fileInput')">\ud83d\udcc1 Load Image</button>
+      <button class="btn btn-sq" onclick="clearAll()" title="Clear">\u2715</button>
     </div>
-    <div class="action-row" style="margin-top:-4px">
-      <button class="btn btn-icon" onclick="clearImage()" title="Clear" style="font-size:0.75rem;width:auto;padding:0 14px;">✕ Clear</button>
+    <div class="sl-row">
+      <label>Opacity</label>
+      <input type="range" min="5" max="100" value="65" oninput="setVal('opacity',this.value,'opV')">
+      <span class="sl-val" id="opV">65%</span>
     </div>
-    <div id="statusText">
-      <span class="status-dot" id="statusDot"></span>
-      <span id="statusMsg">Step 1: Load image → Step 2: Start Camera</span>
+    <div class="sl-row">
+      <label>Size</label>
+      <input type="range" min="20" max="150" value="100" oninput="setVal('scale',this.value,'scV')">
+      <span class="sl-val" id="scV">100%</span>
     </div>
+    <div class="status"><span class="dot" id="sDot"></span><span id="sMsg">Start camera \u2192 load image</span></div>
   </div>
 
-  <!-- CROP MODE -->
-  <div id="cropControls">
-    <div class="size-row">
+  <!-- CROP TAB -->
+  <div class="pane" id="paneCrop">
+    <div class="sz-row">
       <label>Canvas</label>
-      <input type="number" id="canvasW" value="30" min="1" max="999" oninput="updateCrop()">
-      <span>×</span>
-      <input type="number" id="canvasH" value="40" min="1" max="999" oninput="updateCrop()">
+      <input type="number" id="canvasW" value="30" min="1" oninput="cropSizeChanged()">
+      <span>\u00d7</span>
+      <input type="number" id="canvasH" value="40" min="1" oninput="cropSizeChanged()">
       <span>cm</span>
     </div>
-    <div class="action-row">
-      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">📁 Load Image</button>
-      <button class="btn btn-secondary" onclick="clearImage()">Clear</button>
+    <div class="row">
+      <button class="btn btn-p" onclick="triggerLoad('fileInputCrop')">\ud83d\udcc1 Load Image to Crop</button>
+      <button class="btn btn-s" id="btnApplyCrop" onclick="applyCrop()" style="display:none">\u2702\ufe0f Apply Crop</button>
     </div>
-    <div class="info-label" id="cropInfo">Enter your canvas size and load a photo</div>
+    <div id="cropInfo" style="font-size:0.7rem;color:var(--muted);line-height:1.5;">Load an image, then drag the orange box to choose your crop area</div>
   </div>
 
+  <!-- PIN TAB -->
+  <div class="pane" id="panePin">
+    <div class="row">
+      <button class="btn btn-p" id="btnPinMode" onclick="togglePinMode()">\ud83d\udccc Tap 4 Canvas Corners</button>
+      <button class="btn btn-s" onclick="clearPins()">Reset Pins</button>
+    </div>
+    <div style="font-size:0.7rem;color:var(--muted);line-height:1.6;">
+      Tap each corner of your physical canvas on the camera view. The outline will lock to those corners and stay stable as you move.
+    </div>
+    <div class="status"><span class="dot" id="pinDot"></span><span id="pinMsg">No corners set</span></div>
+  </div>
+
+  <!-- GRID TAB -->
+  <div class="pane" id="paneGrid">
+    <div class="chips" id="gridStyleChips">
+      <span class="chip" data-g="equal"   onclick="toggleGrid(this)">Equal Grid</span>
+      <span class="chip" data-g="thirds"  onclick="toggleGrid(this)">Rule of Thirds</span>
+      <span class="chip" data-g="custom"  onclick="toggleGrid(this)">Custom</span>
+    </div>
+    <div id="customGridRow" class="sz-row" style="display:none">
+      <label>Rows</label>
+      <input type="number" id="gridRows" value="4" min="1" max="20" oninput="redrawAll()">
+      <span>\u00d7</span>
+      <input type="number" id="gridCols" value="4" min="1" max="20" oninput="redrawAll()">
+      <label style="margin-left:4px">Cols</label>
+    </div>
+    <div class="chips" style="margin-top:2px">
+      <span class="chip on" data-v="outline" onclick="toggleVis(this)">Outline</span>
+      <span class="chip on" data-v="grid"    onclick="toggleVis(this)">Grid Lines</span>
+    </div>
+    <div class="sl-row">
+      <label>Grid \u03b1</label>
+      <input type="range" min="5" max="100" value="40" oninput="setVal('gridOp',this.value,'gOpV')">
+      <span class="sl-val" id="gOpV">40%</span>
+    </div>
+  </div>
+
+</div><!-- /panel -->
+
+<input type="file" id="fileInput"     accept="image/*" onchange="loadImageAR(event)">
+<input type="file" id="fileInputCrop" accept="image/*" onchange="loadImageCrop(event)">
+
+<div id="httpsWarn">
+  <h2>Camera Blocked</h2>
+  <p>You're opening this file locally.<br><strong>Chrome blocks camera for local files.</strong></p>
+  <ol>
+    <li>Go to <span>github.com</span></li>
+    <li>Upload this file as <span>index.html</span></li>
+    <li>Enable <span>GitHub Pages</span></li>
+    <li>Open the <span>https://</span> link</li>
+  </ol>
+  <button style="background:var(--accent);color:#fff;border:none;border-radius:9px;padding:12px 24px;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;margin-top:6px" onclick="this.parentElement.style.display='none'">Continue Anyway</button>
 </div>
 
-<input type="file" id="fileInput" accept="image/*" onchange="loadImage(event)">
-
 <script>
-  // ── State ──
-  let currentMode = 'ar';
-  let referenceImage = null;
-  let outlineCanvas = document.createElement('canvas');
-  let outlineCtx = outlineCanvas.getContext('2d');
-  let overlayOpacity = 0.6;
-  let cameraStream = null;
-  let cameraActive = false;
-  let animFrame = null;
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+//  STATE
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+const S = {
+  tab: 'ar',
+  // camera
+  stream: null, camOn: false,
+  // images
+  refImg: null,       // original loaded image
+  croppedImg: null,   // after crop applied
+  // outline canvas (offscreen)
+  outC: document.createElement('canvas'),
+  // AR
+  opacity: 0.65, scale: 1.0,
+  // pin
+  pins: [], pinMode: false,
+  // grid
+  gridStyle: null,   // 'equal','thirds','custom'
+  showOutline: true, showGrid: true,
+  gridOp: 0.4,
+  // crop drag
+  cropBox: {x:0,y:0,w:0,h:0},
+  imgDisp: {x:0,y:0,w:0,h:0},
+  dragHandle: null, dragStart: null,
+  // anim
+  raf: null
+};
 
-  const video = document.getElementById('cameraFeed');
-  const overlayCanvas = document.getElementById('overlayCanvas');
-  const ctx = overlayCanvas.getContext('2d');
-  const cropFrame = document.getElementById('cropFrame');
-  const placeholder = document.getElementById('placeholder');
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+//  DOM REFS
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+const video    = document.getElementById('cameraFeed');
+const mainC    = document.getElementById('mainCanvas');
+const ctx      = mainC.getContext('2d');
+const cropCanv = document.getElementById('cropCanvas');
+const cropCtx  = cropCanv.getContext('2d');
+const cropUI   = document.getElementById('cropUI');
+const cropImgEl= document.getElementById('cropImg');
+const cropBoxEl= document.getElementById('cropBox');
+const ph       = document.getElementById('placeholder');
+const pinHint  = document.getElementById('pinHint');
+const btnCam   = document.getElementById('btnCam');
 
-  // ── Mode switching ──
-  function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('btnAR').classList.toggle('active', mode === 'ar');
-    document.getElementById('btnCrop').classList.toggle('active', mode === 'crop');
-    document.getElementById('arControls').style.display = mode === 'ar' ? 'flex' : 'none';
-    document.getElementById('cropControls').style.display = mode === 'crop' ? 'flex' : 'none';
-    document.getElementById('opacityRow').style.display = (mode === 'ar' && referenceImage) ? 'flex' : 'none';
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+//  TABS
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+function setTab(t) {
+  S.tab = t;
+  ['ar','crop','pin','grid'].forEach(id=>{
+    document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('active', id===t);
+    document.getElementById('pane'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('active', id===t);
+  });
+  // show/hide cropUI
+  cropUI.style.display = t==='crop' ? 'block' : 'none';
+  cropCanv.style.display = 'none';
+  pinHint.style.display = 'none';
+  S.pinMode = false;
+  document.getElementById('btnPinMode').classList.remove('on');
+  redrawAll();
+}
 
-    if (mode === 'ar') {
-      cropFrame.style.display = 'none';
-      if (referenceImage) startARLoop();
-    } else {
-      cancelAnimationFrame(animFrame);
-      clearOverlay();
-      if (referenceImage) updateCrop();
-    }
-  }
-
-  // ── Load image ──
-  function loadImage(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        referenceImage = img;
-        placeholder.style.display = 'none';
-
-        if (currentMode === 'ar') {
-          generateOutline(img);
-          document.getElementById('opacityRow').style.display = 'flex';
-          if (cameraActive) startARLoop();
-          setStatus('Image ready ✓ — now tap Start Camera', true);
-        } else {
-          updateCrop();
-        }
-        setStatus('Image loaded ✓', true);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-    event.target.value = '';
-  }
-
-  // ── Edge detection (Sobel) ──
-  function generateOutline(img) {
-    const W = img.width, H = img.height;
-    outlineCanvas.width = W;
-    outlineCanvas.height = H;
-    outlineCtx.drawImage(img, 0, 0);
-
-    const src = outlineCtx.getImageData(0, 0, W, H);
-    const dst = outlineCtx.createImageData(W, H);
-    const d = src.data, o = dst.data;
-
-    function gray(x, y) {
-      const i = (y * W + x) * 4;
-      return 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
-    }
-
-    for (let y = 1; y < H - 1; y++) {
-      for (let x = 1; x < W - 1; x++) {
-        const gx =
-          -gray(x-1,y-1) - 2*gray(x-1,y) - gray(x-1,y+1)
-          + gray(x+1,y-1) + 2*gray(x+1,y) + gray(x+1,y+1);
-        const gy =
-          -gray(x-1,y-1) - 2*gray(x,y-1) - gray(x+1,y-1)
-          + gray(x-1,y+1) + 2*gray(x,y+1) + gray(x+1,y+1);
-        const mag = Math.min(255, Math.sqrt(gx*gx + gy*gy) * 1.4);
-        const i = (y * W + x) * 4;
-        // white lines on transparent background
-        o[i] = 255;
-        o[i+1] = 255;
-        o[i+2] = 255;
-        o[i+3] = mag > 30 ? Math.min(255, mag * 1.5) : 0;
-      }
-    }
-    outlineCtx.putImageData(dst, 0, 0);
-  }
-
-  // ── Camera ──
-  async function startCamera() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setStatus('⚠️ Camera not supported in this browser', false);
-      return;
-    }
-    setStatus('Requesting camera…', false);
-    try {
-      // Try rear camera first
-      cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } }
-      });
-      video.srcObject = cameraStream;
-      video.setAttribute('playsinline', true);
-      video.setAttribute('autoplay', true);
-      video.muted = true;
-
-      await video.play().catch(() => {});
-
-      cameraActive = true;
-      document.getElementById('btnCam').textContent = '🔴 Stop Camera';
-      document.getElementById('btnCam').style.background = 'rgba(232,66,10,0.18)';
-      setStatus('Camera active ✓', true);
-
-      video.addEventListener('loadeddata', () => {
-        if (referenceImage) startARLoop();
-      }, { once: true });
-
-      // Fallback if loadeddata already fired
-      if (video.readyState >= 2 && referenceImage) startARLoop();
-
-    } catch (e) {
-      let msg = 'Camera error';
-      if (e.name === 'NotAllowedError') msg = '⚠️ Camera permission denied — check browser settings';
-      else if (e.name === 'NotFoundError') msg = '⚠️ No camera found on this device';
-      else if (e.name === 'NotReadableError') msg = '⚠️ Camera in use by another app';
-      else msg = '⚠️ ' + e.message;
-      setStatus(msg, false);
-    }
-  }
-
-  function stopCamera() {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(t => t.stop());
-      cameraStream = null;
-    }
-    video.srcObject = null;
-    cameraActive = false;
-    const btn = document.getElementById('btnCam');
-    btn.textContent = '📷 Start Camera';
-    btn.style.background = '';
-  }
-
-  function toggleCamera() {
-    if (cameraActive) {
-      stopCamera();
-      cancelAnimationFrame(animFrame);
-      clearOverlay();
-      setStatus('Camera stopped', false);
-    } else {
-      startCamera();
-    }
-  }
-
-  // ── AR render loop ──
-  function startARLoop() {
-    cancelAnimationFrame(animFrame);
-    function loop() {
-      renderAR();
-      animFrame = requestAnimationFrame(loop);
-    }
-    loop();
-  }
-
-  function renderAR() {
-    const vw = overlayCanvas.offsetWidth;
-    const vh = overlayCanvas.offsetHeight;
-    overlayCanvas.width = vw;
-    overlayCanvas.height = vh;
-    ctx.clearRect(0, 0, vw, vh);
-    if (!referenceImage) return;
-
-    // Fit outline to viewport keeping aspect ratio
-    const imgAR = outlineCanvas.width / outlineCanvas.height;
-    const viewAR = vw / vh;
-    let dw, dh;
-    if (imgAR > viewAR) { dw = vw; dh = vw / imgAR; }
-    else { dh = vh; dw = vh * imgAR; }
-    const dx = (vw - dw) / 2;
-    const dy = (vh - dh) / 2;
-
-    ctx.globalAlpha = overlayOpacity;
-    ctx.drawImage(outlineCanvas, dx, dy, dw, dh);
-    ctx.globalAlpha = 1;
-  }
-
-  // ── Crop guide ──
-  function updateCrop() {
-    if (!referenceImage) {
-      cropFrame.style.display = 'none';
-      document.getElementById('cropInfo').textContent = 'Enter your canvas size and load a photo';
-      return;
-    }
-    const cw = parseFloat(document.getElementById('canvasW').value) || 30;
-    const ch = parseFloat(document.getElementById('canvasH').value) || 40;
-    const canvasAR = cw / ch;
-    const imgAR = referenceImage.width / referenceImage.height;
-
-    const vw = overlayCanvas.offsetWidth || window.innerWidth;
-    const vh = overlayCanvas.offsetHeight || window.innerHeight - 180;
-
-    // Find largest crop rect matching canvas AR that fits in viewport
-    let fw, fh;
-    if (canvasAR > (vw / vh)) { fw = vw * 0.88; fh = fw / canvasAR; }
-    else { fh = vh * 0.88; fw = fh * canvasAR; }
-
-    const left = (vw - fw) / 2;
-    const top = (vh - fh) / 2;
-
-    const viewport = document.querySelector('.viewport');
-    const vpRect = viewport.getBoundingClientRect();
-
-    cropFrame.style.display = 'block';
-    cropFrame.style.left = left + 'px';
-    cropFrame.style.top = top + 'px';
-    cropFrame.style.width = fw + 'px';
-    cropFrame.style.height = fh + 'px';
-
-    // Suggest pixel crop of the reference image
-    let cropW, cropH;
-    if (imgAR > canvasAR) {
-      cropH = referenceImage.height;
-      cropW = Math.round(cropH * canvasAR);
-    } else {
-      cropW = referenceImage.width;
-      cropH = Math.round(cropW / canvasAR);
-    }
-
-    document.getElementById('cropInfo').innerHTML =
-      `Crop your photo to <strong>${cropW} × ${cropH}px</strong> to match a <strong>${cw}×${ch}cm</strong> canvas`;
-  }
-
-  // ── Helpers ──
-  function clearOverlay() {
-    if (overlayCanvas.width) ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-  }
-
-  function clearImage() {
-    referenceImage = null;
-    cancelAnimationFrame(animFrame);
-    clearOverlay();
-    cropFrame.style.display = 'none';
-    document.getElementById('opacityRow').style.display = 'none';
-    placeholder.style.display = 'flex';
-    document.getElementById('cropInfo').textContent = 'Enter your canvas size and load a photo';
-    setStatus('No image loaded', false);
-  }
-
-  function updateOpacity(val) {
-    overlayOpacity = val / 100;
-    document.getElementById('opacityVal').textContent = val + '%';
-  }
-
-  function setStatus(msg, active) {
-    document.getElementById('statusMsg').textContent = msg;
-    document.getElementById('statusDot').classList.toggle('active', active);
-  }
-
-  // Init
-  setMode('ar');
-  window.addEventListener('resize', () => { if (currentMode === 'crop' && referenceImage) updateCrop(); });
-</script>
-</body>
-</html>
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+//  CAMERA
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+async function toggleCamera() {
+  if (S.camOn) { stopCamera(); } else { await startCamera(); }
+}
+async function startCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) { setStatus('Camera not supported',''); return; }
+  setStatus('Requesting permission\u2026','o');
+  try {
+    S.stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:{ideal:'environment'} }
+    });
+    video.srcObject = S.stream;
+    video.setAttribute('playsinline','true');
+    video.muted = true;
+    await video.play().catch(()=>{});
+    S.camOn = true;
+    btnCam.textContent = '\ud83d\udd34 Stop Camera';
+    btnCam.classList.add('on');
+    ph.style.display = 'none';
+    setStatus('Camera on
