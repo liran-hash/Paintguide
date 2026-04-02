@@ -3,917 +3,643 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>PaintGuide AR</title>
+<title>PaintGuide</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
-:root { --ink:#0d0d0d; --paper:#f5f0e8; --accent:#e8420a; --muted:#8a8070; }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow:hidden;}
-body{background:var(--ink);color:var(--paper);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;height:100dvh;}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; background:#111; color:#f0ebe0; font-family:sans-serif; overflow:hidden; }
+body { display:flex; flex-direction:column; height:100dvh; }
 
-/* HEADER */
-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;flex-shrink:0;background:var(--ink);z-index:30;}
-header h1{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;}
-header h1 span{color:var(--accent);}
-.tabs{display:flex;background:rgba(245,240,232,0.08);border:1px solid rgba(245,240,232,0.15);border-radius:20px;overflow:hidden;}
-.tabs button{background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.65rem;font-weight:500;padding:5px 10px;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.2s;}
-.tabs button.active{background:var(--accent);color:#fff;border-radius:18px;}
+#viewport {
+  position:relative; flex:1; background:#000; overflow:hidden; min-height:0;
+}
+video {
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+}
+canvas {
+  position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none;
+}
 
-/* VIEWPORT */
-.viewport{position:relative;flex:1;overflow:hidden;background:#0a0a0a;min-height:0;}
-#cameraFeed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
-#mainCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;}
+/* TABS */
+#tabs {
+  display:flex; background:#1a1a1a; border-bottom:1px solid #333;
+}
+#tabs button {
+  flex:1; background:none; border:none; color:#888; font-size:0.75rem;
+  padding:10px 4px; cursor:pointer; font-family:sans-serif;
+  text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid transparent;
+}
+#tabs button.active { color:#e8420a; border-bottom-color:#e8420a; }
 
-/* PLACEHOLDER */
-.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);z-index:1;text-align:center;padding:24px;pointer-events:none;}
-.ph svg{opacity:0.2;}
-.ph p{font-size:0.82rem;line-height:1.7;}
-.ph strong{color:var(--paper);}
-
-/* CROP UI */
-#cropUI{position:absolute;inset:0;z-index:5;display:none;}
-#cropImgEl{position:absolute;transform-origin:top left;user-select:none;pointer-events:none;}
-#cropBoxEl{position:absolute;border:2px solid var(--accent);box-shadow:0 0 0 9999px rgba(13,13,13,0.55);cursor:move;touch-action:none;}
-.cc{position:absolute;width:26px;height:26px;border-color:var(--accent);border-style:solid;touch-action:none;cursor:pointer;}
-.cc.tl{top:-2px;left:-2px;border-width:3px 0 0 3px;}
-.cc.tr{top:-2px;right:-2px;border-width:3px 3px 0 0;}
-.cc.bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;}
-.cc.br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;}
-
-/* PIN HINT */
-#pinHint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(13,13,13,0.88);border:1px solid var(--accent);border-radius:8px;padding:7px 16px;font-size:0.75rem;color:var(--paper);z-index:10;pointer-events:none;white-space:nowrap;display:none;}
-
-/* SAVED IMAGE VIEWER */
-#imgViewer{display:none;position:fixed;inset:0;z-index:200;background:rgba(13,13,13,0.97);flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;}
-#imgViewer img{max-width:100%;max-height:70vh;border-radius:6px;object-fit:contain;}
-#imgViewer .viewer-btns{display:flex;gap:10px;}
-
-/* PANEL */
-.panel{background:var(--ink);border-top:1px solid rgba(245,240,232,0.07);padding:10px 14px 20px;flex-shrink:0;z-index:30;}
-.pane{display:none;flex-direction:column;gap:8px;}
-.pane.active{display:flex;}
-.row{display:flex;gap:7px;align-items:center;}
+/* PANELS */
+#panel { background:#1a1a1a; padding:12px 14px 20px; flex-shrink:0; }
+.pane { display:none; flex-direction:column; gap:10px; }
+.pane.on { display:flex; }
 
 /* BUTTONS */
-.btn{border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.78rem;padding:11px 12px;cursor:pointer;transition:transform 0.15s,background 0.15s;white-space:nowrap;}
-.btn:active{transform:scale(0.96);}
-.btn-p{background:var(--accent);color:#fff;flex:1;}
-.btn-s{background:rgba(245,240,232,0.08);color:var(--paper);border:1px solid rgba(245,240,232,0.12);flex:1;}
-.btn-s.on{background:rgba(232,66,10,0.18);border-color:var(--accent);color:var(--accent);}
-.btn-warn{background:rgba(232,66,10,0.15);color:var(--accent);border:1px solid rgba(232,66,10,0.3);flex:1;}
-.btn-sq{background:rgba(245,240,232,0.08);color:var(--paper);border:1px solid rgba(245,240,232,0.12);width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:0.78rem;flex-shrink:0;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.row { display:flex; gap:8px; }
+button.p { background:#e8420a; color:#fff; border:none; border-radius:8px; padding:12px 16px; font-size:0.82rem; cursor:pointer; flex:1; font-family:sans-serif; }
+button.s { background:#2a2a2a; color:#f0ebe0; border:1px solid #444; border-radius:8px; padding:12px 16px; font-size:0.82rem; cursor:pointer; flex:1; font-family:sans-serif; }
+button.s.on { background:#3a1a10; border-color:#e8420a; color:#e8420a; }
+button.warn { background:#2a1a10; color:#e8420a; border:1px solid #e8420a44; border-radius:8px; padding:12px 16px; font-size:0.82rem; cursor:pointer; flex:1; font-family:sans-serif; }
 
 /* SLIDERS */
-.sl-row{display:flex;align-items:center;gap:8px;}
-.sl-row label{font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);width:46px;flex-shrink:0;}
-.sl-row input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:rgba(245,240,232,0.18);border-radius:2px;outline:none;}
-.sl-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;}
-.sl-val{font-size:0.7rem;color:var(--paper);width:34px;text-align:right;flex-shrink:0;}
-
-/* CHIPS */
-.chips{display:flex;gap:6px;flex-wrap:wrap;}
-.chip{background:rgba(245,240,232,0.07);border:1px solid rgba(245,240,232,0.12);border-radius:7px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.7rem;padding:5px 10px;cursor:pointer;transition:all 0.18s;}
-.chip.on{background:rgba(232,66,10,0.2);border-color:var(--accent);color:var(--paper);}
-
-/* SIZE INPUTS */
-.sz-row{display:flex;align-items:center;gap:7px;background:rgba(245,240,232,0.05);border:1px solid rgba(245,240,232,0.1);border-radius:9px;padding:8px 12px;}
-.sz-row label{font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);white-space:nowrap;}
-.sz-row input{background:none;border:none;border-bottom:1px solid rgba(245,240,232,0.22);color:var(--paper);font-family:'DM Sans',sans-serif;font-size:0.86rem;width:46px;text-align:center;outline:none;padding:2px 3px;}
-.sz-row span{color:var(--muted);font-size:0.7rem;}
+.sl { display:flex; align-items:center; gap:8px; }
+.sl span { font-size:0.7rem; color:#888; width:50px; flex-shrink:0; }
+.sl input { flex:1; accent-color:#e8420a; }
+.sl b { font-size:0.7rem; color:#f0ebe0; width:36px; text-align:right; }
 
 /* STATUS */
-.status{display:flex;align-items:center;gap:6px;}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all 0.3s;}
-.dot.g{background:#4caf50;box-shadow:0 0 5px #4caf50;}
-.dot.o{background:#ff9800;box-shadow:0 0 5px #ff9800;}
-.smsg{font-size:0.7rem;color:var(--muted);}
-.info{font-size:0.68rem;color:var(--muted);line-height:1.6;}
-.info strong{color:var(--paper);}
+#status { font-size:0.72rem; color:#888; padding-top:2px; }
+#status b { color:#f0ebe0; }
 
-/* SAVED THUMBS */
-#savedList{display:flex;gap:8px;overflow-x:auto;padding:2px 0;}
-#savedList:empty::after{content:'No saved crops yet';font-size:0.68rem;color:var(--muted);}
-.thumb{width:54px;height:54px;border-radius:6px;object-fit:cover;border:2px solid rgba(245,240,232,0.15);cursor:pointer;flex-shrink:0;}
-.thumb:active{border-color:var(--accent);}
-
-/* HTTPS WARNING */
-#httpsWarn{display:none;position:fixed;inset:0;z-index:999;background:rgba(13,13,13,0.97);flex-direction:column;align-items:center;justify-content:center;padding:26px;text-align:center;gap:14px;}
-#httpsWarn h2{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--accent);letter-spacing:2px;}
-#httpsWarn p{font-size:0.82rem;line-height:1.7;color:var(--muted);max-width:300px;}
-#httpsWarn p strong{color:var(--paper);}
-#httpsWarn ol{text-align:left;font-size:0.8rem;color:var(--paper);line-height:2.2;padding-left:20px;}
-#httpsWarn ol span{color:var(--accent);}
-
-#fileInput,#fileInputCrop{display:none;}
-</style>
-</head>
-<body>
-
-<header>
-  <h1>Paint<span>Guide</span></h1>
-  <div class="tabs">
-    <button id="tabAR"   class="active" onclick="setTab('ar')">AR</button>
-    <button id="tabCrop" onclick="setTab('crop')">Crop</button>
-    <button id="tabPin"  onclick="setTab('pin')">Pin</button>
-    <button id="tabGrid" onclick="setTab('grid')">Grid</button>
-    <button id="tabSaved" onclick="setTab('saved')">Saved</button>
-  </div>
-</header>
-
-<div class="viewport" id="viewport">
-  <video id="cameraFeed" autoplay playsinline muted></video>
-  <canvas id="mainCanvas"></canvas>
-  <div id="cropUI">
-    <img id="cropImgEl" alt="">
-    <div id="cropBoxEl">
-      <div class="cc tl" data-h="tl"></div>
-      <div class="cc tr" data-h="tr"></div>
-      <div class="cc bl" data-h="bl"></div>
-      <div class="cc br" data-h="br"></div>
-    </div>
-  </div>
-  <div id="pinHint"></div>
-  <div class="ph" id="placeholder">
-    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1">
-      <rect x="3" y="3" width="18" height="18" rx="2"/>
-      <circle cx="8.5" cy="8.5" r="1.5"/>
-      <path d="m21 15-5-5L5 21"/>
-    </svg>
-    <p>Tap <strong>Start Camera</strong><br>then <strong>Load Image</strong></p>
-  </div>
-</div>
-
-<!-- SAVED IMAGE FULL VIEWER -->
-<div id="imgViewer">
-  <img id="viewerImg" src="" alt="">
-  <div class="viewer-btns">
-    <button class="btn btn-p" onclick="downloadViewed()">Download</button>
-    <button class="btn btn-s" onclick="closeViewer()">Close</button>
-  </div>
-</div>
-
-<div class="panel">
-
-  <!-- AR -->
-  <div class="pane active" id="paneAR">
-    <div class="row">
-      <button class="btn btn-p" id="btnCam" onclick="toggleCamera()">Start Camera</button>
-      <button class="btn btn-s" onclick="document.getElementById('fileInput').click()">Load Image</button>
-      <button class="btn btn-warn" onclick="resetAll()">Reset All</button>
-    </div>
-    <div class="sl-row">
-      <label>Opacity</label>
-      <input type="range" id="slOpacity" min="5" max="100" value="65" oninput="onOpacity(this.value)">
-      <span class="sl-val" id="valOpacity">65%</span>
-    </div>
-    <div class="sl-row">
-      <label>Size</label>
-      <input type="range" id="slScale" min="20" max="150" value="100" oninput="onScale(this.value)">
-      <span class="sl-val" id="valScale">100%</span>
-    </div>
-    <div class="status">
-      <span class="dot" id="sDot"></span>
-      <span class="smsg" id="sMsg">Start camera, then load image</span>
-    </div>
-  </div>
-
-  <!-- CROP -->
-  <div class="pane" id="paneCrop">
-    <div class="sz-row">
-      <label>Canvas</label>
-      <input type="number" id="canvasW" value="30" min="1" oninput="initCropBox()">
-      <span>x</span>
-      <input type="number" id="canvasH" value="40" min="1" oninput="initCropBox()">
-      <span>cm</span>
-    </div>
-    <div class="row">
-      <button class="btn btn-p" onclick="document.getElementById('fileInputCrop').click()">Load Image to Crop</button>
-      <button class="btn btn-s" id="btnApplyCrop" onclick="applyCrop()" style="display:none">Apply Crop</button>
-    </div>
-    <div class="row" id="cropActionRow" style="display:none">
-      <button class="btn btn-s" onclick="downloadCrop()">Download Crop</button>
-      <button class="btn btn-s" onclick="saveCropToGallery()">Save to Gallery</button>
-    </div>
-    <div class="info" id="cropInfo">Load an image, then drag the orange box to select your crop area</div>
-  </div>
-
-  <!-- PIN -->
-  <div class="pane" id="panePin">
-    <div class="row">
-      <button class="btn btn-p" id="btnPinMode" onclick="togglePinMode()">Tap 4 Canvas Corners</button>
-      <button class="btn btn-s" onclick="clearPins()">Clear Pins</button>
-    </div>
-    <div class="info">
-      Point camera at your canvas. Tap <strong>Tap 4 Canvas Corners</strong>, then tap each corner of your canvas on the screen in order: top-left, top-right, bottom-left, bottom-right. The outline will warp to fill your canvas exactly. Keep the phone still after pinning.
-    </div>
-    <div class="status">
-      <span class="dot" id="pinDot"></span>
-      <span class="smsg" id="pinMsg">No corners set</span>
-    </div>
-  </div>
-
-  <!-- GRID -->
-  <div class="pane" id="paneGrid">
-    <div class="chips">
-      <span class="chip" data-g="equal"  onclick="toggleGridStyle(this)">Equal Grid</span>
-      <span class="chip" data-g="thirds" onclick="toggleGridStyle(this)">Rule of Thirds</span>
-      <span class="chip" data-g="custom" onclick="toggleGridStyle(this)">Custom</span>
-    </div>
-    <div id="customGridRow" class="sz-row" style="display:none">
-      <label>Rows</label>
-      <input type="number" id="gridRows" value="4" min="1" max="20" oninput="redrawAll()">
-      <span>x</span>
-      <input type="number" id="gridCols" value="4" min="1" max="20" oninput="redrawAll()">
-      <label style="margin-left:4px">Cols</label>
-    </div>
-    <div class="chips">
-      <span class="chip on" data-v="outline" onclick="toggleVis(this)">Outline</span>
-      <span class="chip on" data-v="grid"    onclick="toggleVis(this)">Grid Lines</span>
-    </div>
-    <div class="sl-row">
-      <label>Grid</label>
-      <input type="range" id="slGridOp" min="5" max="100" value="40" oninput="onGridOp(this.value)">
-      <span class="sl-val" id="valGridOp">40%</span>
-    </div>
-  </div>
-
-  <!-- SAVED -->
-  <div class="pane" id="paneSaved">
-    <div class="info">Tap a saved crop to view full size or download. Saved here in this session.</div>
-    <div id="savedList"></div>
-    <div class="row" style="margin-top:2px">
-      <button class="btn btn-warn" onclick="clearSaved()">Clear All Saved</button>
-    </div>
-  </div>
-
-</div><!-- /panel -->
-
-<input type="file" id="fileInput"     accept="image/*">
-<input type="file" id="fileInputCrop" accept="image/*">
-
-<div id="httpsWarn">
-  <h2>Camera Blocked</h2>
-  <p>Opened locally.<br><strong>Chrome blocks camera for local files.</strong><br>Use your GitHub Pages link.</p>
-  <ol>
-    <li>Upload as <span>index.html</span> to GitHub</li>
-    <li>Enable <span>GitHub Pages</span> in repo Settings</li>
-    <li>Open the <span>https://</span> link on your phone</li>
-  </ol>
-  <button onclick="document.getElementById('httpsWarn').style.display='none'"
-    style="margin-top:8px;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:12px 24px;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;">
-    Continue Anyway
-  </button>
-</div>
-
-<script>
-// ============================================================
-// STATE
-// ============================================================
-var S = {
-  tab:'ar',
-  stream:null, camOn:false,
-  refImg:null,
-  outC:document.createElement('canvas'),
-  opacity:0.65, scale:1.0,
-  pins:[], pinMode:false,
-  gridStyle:null, showOutline:true, showGrid:true, gridOp:0.4,
-  cropBox:{x:0,y:0,w:0,h:0}, imgDisp:{x:0,y:0,w:0,h:0},
-  lastCropDataURL:null,   // most recent crop as data URL
-  savedCrops:[],          // array of {dataURL, name}
-  raf:null
-};
-
-// ============================================================
-// DOM
-// ============================================================
-var video      = document.getElementById('cameraFeed');
-var mainC      = document.getElementById('mainCanvas');
-var ctx        = mainC.getContext('/* VIEWPORT */
-.viewport { position:relative; flex:1; overflow:hidden; background:#0a0a0a; min-height:0; }
-#cameraFeed { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
-#mainCanvas { position:absolute; inset:0; width:100%; height:100%; z-index:2; }
-
-/* PLACEHOLDER */
-.ph {
-  position:absolute; inset:0; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:10px;
-  color:var(--muted); z-index:1; text-align:center; padding:24px; pointer-events:none;
+/* CROP */
+#cropLayer { position:absolute; inset:0; z-index:5; display:none; }
+#cropLayer img { position:absolute; pointer-events:none; user-select:none; }
+#cropBox {
+  position:absolute; border:2px solid #e8420a;
+  box-shadow:0 0 0 9999px rgba(0,0,0,0.55);
+  touch-action:none; cursor:move;
 }
-.ph svg { opacity:0.2; }
-.ph p { font-size:0.82rem; line-height:1.7; }
-.ph strong { color:var(--paper); }
+.ch { position:absolute; width:28px; height:28px; border:3px solid #e8420a; touch-action:none; }
+.ch.tl { top:-2px; left:-2px;   border-right:none; border-bottom:none; }
+.ch.tr { top:-2px; right:-2px;  border-left:none;  border-bottom:none; }
+.ch.bl { bottom:-2px; left:-2px;  border-right:none; border-top:none; }
+.ch.br { bottom:-2px; right:-2px; border-left:none;  border-top:none; }
 
-/* CROP UI */
-#cropUI { position:absolute; inset:0; z-index:5; display:none; }
-#cropImgEl { position:absolute; transform-origin:top left; user-select:none; pointer-events:none; }
-#cropBoxEl {
-  position:absolute; border:2px solid var(--accent);
-  box-shadow:0 0 0 9999px rgba(13,13,13,0.55);
-  cursor:move; touch-action:none;
-}
-.cc { position:absolute; width:24px; height:24px; border-color:var(--accent); border-style:solid; touch-action:none; cursor:pointer; }
-.cc.tl { top:-2px; left:-2px;   border-width:3px 0 0 3px; }
-.cc.tr { top:-2px; right:-2px;  border-width:3px 3px 0 0; }
-.cc.bl { bottom:-2px; left:-2px;  border-width:0 0 3px 3px; }
-.cc.br { bottom:-2px; right:-2px; border-width:0 3px 3px 0; }
-
-/* PIN HINT */
-#pinHint {
-  position:absolute; top:12px; left:50%; transform:translateX(-50%);
-  background:rgba(13,13,13,0.85); border:1px solid var(--accent);
-  border-radius:8px; padding:7px 16px; font-size:0.75rem; color:var(--paper);
-  z-index:10; pointer-events:none; white-space:nowrap; display:none;
-}
-
-/* BOTTOM PANEL */
-.panel { background:var(--ink); border-top:1px solid rgba(245,240,232,0.07); padding:12px 16px 22px; flex-shrink:0; z-index:30; }
-.pane { display:none; flex-direction:column; gap:9px; }
-.pane.active { display:flex; }
-.row { display:flex; gap:8px; align-items:center; }
-
-/* BUTTONS */
-.btn {
-  border:none; border-radius:9px; font-family:'DM Sans',sans-serif; font-weight:500;
-  font-size:0.8rem; padding:12px 14px; cursor:pointer;
-  transition:transform 0.15s, background 0.15s; white-space:nowrap;
-}
-.btn:active { transform:scale(0.96); }
-.btn-p { background:var(--accent); color:#fff; flex:1; }
-.btn-s { background:rgba(245,240,232,0.08); color:var(--paper); border:1px solid rgba(245,240,232,0.12); flex:1; }
-.btn-s.on { background:rgba(232,66,10,0.18); border-color:var(--accent); color:var(--accent); }
-.btn-sq {
-  background:rgba(245,240,232,0.08); color:var(--paper); border:1px solid rgba(245,240,232,0.12);
-  width:44px; height:44px; padding:0; display:flex; align-items:center; justify-content:center;
-  border-radius:9px; font-size:0.8rem; flex-shrink:0; cursor:pointer; font-family:'DM Sans',sans-serif;
-}
-
-/* SLIDERS */
-.sl-row { display:flex; align-items:center; gap:8px; }
-.sl-row label { font-size:0.65rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); width:48px; flex-shrink:0; }
-.sl-row input[type=range] { flex:1; -webkit-appearance:none; height:3px; background:rgba(245,240,232,0.18); border-radius:2px; outline:none; }
-.sl-row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--accent); cursor:pointer; }
-.sl-val { font-size:0.7rem; color:var(--paper); width:34px; text-align:right; flex-shrink:0; }
+/* GRID SIZE INPUTS */
+.sz { display:flex; align-items:center; gap:6px; }
+.sz label { font-size:0.7rem; color:#888; }
+.sz input[type=number] { background:#2a2a2a; border:1px solid #444; color:#f0ebe0; border-radius:6px; padding:4px 6px; width:52px; text-align:center; font-size:0.85rem; font-family:sans-serif; }
 
 /* CHIPS */
 .chips { display:flex; gap:6px; flex-wrap:wrap; }
-.chip { background:rgba(245,240,232,0.07); border:1px solid rgba(245,240,232,0.12); border-radius:7px; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.72rem; padding:6px 11px; cursor:pointer; transition:all 0.18s; }
-.chip.on { background:rgba(232,66,10,0.2); border-color:var(--accent); color:var(--paper); }
+.chip { background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#888; font-size:0.7rem; padding:5px 10px; cursor:pointer; }
+.chip.on { background:#3a1a10; border-color:#e8420a; color:#f0ebe0; }
 
-/* SIZE INPUTS */
-.sz-row { display:flex; align-items:center; gap:7px; background:rgba(245,240,232,0.05); border:1px solid rgba(245,240,232,0.1); border-radius:9px; padding:9px 13px; }
-.sz-row label { font-size:0.65rem; text-transform:uppercase; letter-spacing:1px; color:var(--muted); white-space:nowrap; }
-.sz-row input { background:none; border:none; border-bottom:1px solid rgba(245,240,232,0.22); color:var(--paper); font-family:'DM Sans',sans-serif; font-size:0.88rem; width:48px; text-align:center; outline:none; padding:2px 3px; }
-.sz-row span { color:var(--muted); font-size:0.72rem; }
+/* VIEWER */
+#viewer { display:none; position:fixed; inset:0; z-index:99; background:#000; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px; }
+#viewer img { max-width:100%; max-height:72vh; object-fit:contain; border-radius:6px; }
+#viewer .row { width:100%; max-width:400px; }
 
-/* STATUS */
-.status { display:flex; align-items:center; gap:6px; }
-.dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; transition:all 0.3s; }
-.dot.g { background:#4caf50; box-shadow:0 0 5px #4caf50; }
-.dot.o { background:#ff9800; box-shadow:0 0 5px #ff9800; }
-.smsg { font-size:0.7rem; color:var(--muted); }
-.info { font-size:0.7rem; color:var(--muted); line-height:1.6; }
-.info strong { color:var(--paper); }
+/* SAVED THUMBS */
+#thumbs { display:flex; gap:8px; overflow-x:auto; min-height:60px; align-items:center; }
+#thumbs img { width:56px; height:56px; object-fit:cover; border-radius:6px; border:2px solid #333; cursor:pointer; flex-shrink:0; }
+#thumbs img:active { border-color:#e8420a; }
+.empty-note { font-size:0.7rem; color:#555; }
 
-/* HTTPS WARNING */
-#httpsWarn {
-  display:none; position:fixed; inset:0; z-index:999; background:rgba(13,13,13,0.97);
-  flex-direction:column; align-items:center; justify-content:center;
-  padding:26px; text-align:center; gap:14px;
-}
-#httpsWarn h2 { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; color:var(--accent); letter-spacing:2px; }
-#httpsWarn p { font-size:0.82rem; line-height:1.7; color:var(--muted); max-width:300px; }
-#httpsWarn p strong { color:var(--paper); }
-#httpsWarn ol { text-align:left; font-size:0.8rem; color:var(--paper); line-height:2.2; padding-left:20px; }
-#httpsWarn ol span { color:var(--accent); }
+/* HINT */
+#hint { position:absolute; top:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); border:1px solid #e8420a; border-radius:8px; padding:7px 16px; font-size:0.75rem; color:#f0ebe0; z-index:10; white-space:nowrap; display:none; }
 
-#fileInput, #fileInputCrop { display:none; }
+#ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:1; pointer-events:none; }
+#ph p { color:#555; font-size:0.85rem; text-align:center; line-height:1.8; }
+#ph b { color:#888; }
+
+#fileAR, #fileCrop { display:none; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Paint<span>Guide</span></h1>
-  <div class="tabs">
-    <button id="tabAR"   class="active" onclick="setTab('ar')">AR</button>
-    <button id="tabCrop" onclick="setTab('crop')">Crop</button>
-    <button id="tabPin"  onclick="setTab('pin')">Pin</button>
-    <button id="tabGrid" onclick="setTab('grid')">Grid</button>
-  </div>
-</header>
-
-<div class="viewport" id="viewport">
-  <video id="cameraFeed" autoplay playsinline muted></video>
-  <canvas id="mainCanvas"></canvas>
-
-  <div id="cropUI">
-    <img id="cropImgEl" alt="">
-    <div id="cropBoxEl">
-      <div class="cc tl" data-h="tl"></div>
-      <div class="cc tr" data-h="tr"></div>
-      <div class="cc bl" data-h="bl"></div>
-      <div class="cc br" data-h="br"></div>
-    </div>
-  </div>
-
-  <div id="pinHint"></div>
-
-  <div class="ph" id="placeholder">
-    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1">
-      <rect x="3" y="3" width="18" height="18" rx="2"/>
-      <circle cx="8.5" cy="8.5" r="1.5"/>
-      <path d="m21 15-5-5L5 21"/>
-    </svg>
-    <p>Tap <strong>Start Camera</strong><br>then <strong>Load Image</strong></p>
-  </div>
+<div id="tabs">
+  <button class="active" onclick="tab('ar')">AR</button>
+  <button onclick="tab('crop')">Crop</button>
+  <button onclick="tab('pin')">Pin</button>
+  <button onclick="tab('grid')">Grid</button>
+  <button onclick="tab('saved')">Saved</button>
 </div>
 
-<div class="panel">
+<div id="viewport">
+  <video id="vid" autoplay playsinline muted></video>
+  <canvas id="cvs"></canvas>
 
-  <!-- ══ AR ══ -->
-  <div class="pane active" id="paneAR">
-    <div class="row">
-      <button class="btn btn-p" id="btnCam" onclick="toggleCamera()">Start Camera</button>
-      <button class="btn btn-s" onclick="document.getElementById('fileInput').click()">Load Image</button>
-      <button class="btn btn-sq" onclick="clearAll()">CLR</button>
-    </div>
-    <div class="sl-row">
-      <label>Opacity</label>
-      <input type="range" id="slOpacity" min="5" max="100" value="65" oninput="onOpacity(this.value)">
-      <span class="sl-val" id="valOpacity">65%</span>
-    </div>
-    <div class="sl-row">
-      <label>Size</label>
-      <input type="range" id="slScale" min="20" max="150" value="100" oninput="onScale(this.value)">
-      <span class="sl-val" id="valScale">100%</span>
-    </div>
-    <div class="status">
-      <span class="dot" id="sDot"></span>
-      <span class="smsg" id="sMsg">Start camera, then load image</span>
+  <div id="cropLayer">
+    <img id="cimg" alt="">
+    <div id="cropBox">
+      <div class="ch tl" data-h="tl"></div>
+      <div class="ch tr" data-h="tr"></div>
+      <div class="ch bl" data-h="bl"></div>
+      <div class="ch br" data-h="br"></div>
     </div>
   </div>
 
-  <!-- ══ CROP ══ -->
-  <div class="pane" id="paneCrop">
-    <div class="sz-row">
+  <div id="hint"></div>
+  <div id="ph"><p>Tap <b>Start Camera</b><br>then <b>Load Image</b></p></div>
+</div>
+
+<div id="panel">
+
+  <div class="pane on" id="pAR">
+    <div class="row">
+      <button class="p" id="bCam" onclick="toggleCam()">Start Camera</button>
+      <button class="s" onclick="fi('fileAR')">Load Image</button>
+      <button class="warn" onclick="resetAll()">Reset</button>
+    </div>
+    <div class="sl">
+      <span>Opacity</span>
+      <input type="range" min="5" max="100" value="65" oninput="V.op=this.value/100;lbl('lOp',this.value+'%');draw()">
+      <b id="lOp">65%</b>
+    </div>
+    <div class="sl">
+      <span>Size</span>
+      <input type="range" min="20" max="150" value="100" oninput="V.sc=this.value/100;lbl('lSc',this.value+'%');draw()">
+      <b id="lSc">100%</b>
+    </div>
+    <div id="status">Start camera, then load image</div>
+  </div>
+
+  <div class="pane" id="pCrop">
+    <div class="sz">
       <label>Canvas</label>
-      <input type="number" id="canvasW" value="30" min="1" oninput="initCropBox()">
-      <span>x</span>
-      <input type="number" id="canvasH" value="40" min="1" oninput="initCropBox()">
-      <span>cm</span>
+      <input type="number" id="cw" value="30" min="1" oninput="initBox()">
+      <label>x</label>
+      <input type="number" id="ch2" value="40" min="1" oninput="initBox()">
+      <label>cm</label>
     </div>
     <div class="row">
-      <button class="btn btn-p" onclick="document.getElementById('fileInputCrop').click()">Load Image to Crop</button>
-      <button class="btn btn-s" id="btnApplyCrop" onclick="applyCrop()" style="display:none">Apply Crop</button>
+      <button class="p" onclick="fi('fileCrop')">Load Image</button>
+      <button class="s" id="bApply" onclick="applyCrop()" style="display:none">Apply Crop</button>
     </div>
-    <div class="info" id="cropInfo">Load an image, then drag the orange box to select your crop area</div>
+    <div class="row" id="cropBtns" style="display:none">
+      <button class="s" onclick="dlCrop()">Download</button>
+      <button class="s" onclick="saveCrop()">Save to Gallery</button>
+    </div>
+    <div id="cropMsg" style="font-size:0.7rem;color:#888;line-height:1.6">Load an image then drag the box to select your crop area</div>
   </div>
 
-  <!-- ══ PIN ══ -->
-  <div class="pane" id="panePin">
+  <div class="pane" id="pPin">
     <div class="row">
-      <button class="btn btn-p" id="btnPinMode" onclick="togglePinMode()">Tap 4 Canvas Corners</button>
-      <button class="btn btn-s" onclick="clearPins()">Reset</button>
+      <button class="p" id="bPin" onclick="togglePin()">Tap 4 Corners</button>
+      <button class="s" onclick="clearPins()">Clear</button>
     </div>
-    <div class="info">Tap each corner of your physical canvas on the camera view. The outline locks to those corners.</div>
-    <div class="status">
-      <span class="dot" id="pinDot"></span>
-      <span class="smsg" id="pinMsg">No corners set</span>
+    <div style="font-size:0.7rem;color:#888;line-height:1.7">
+      Point camera at canvas. Tap <b style="color:#f0ebe0">Tap 4 Corners</b> then tap:<br>
+      1 Top-left &nbsp; 2 Top-right &nbsp; 3 Bottom-left &nbsp; 4 Bottom-right.<br>
+      Outline warps to fill your canvas. Keep phone still.
     </div>
+    <div id="pinStatus" style="font-size:0.7rem;color:#888">No corners set</div>
   </div>
 
-  <!-- ══ GRID ══ -->
-  <div class="pane" id="paneGrid">
+  <div class="pane" id="pGrid">
     <div class="chips">
-      <span class="chip" data-g="equal"  onclick="toggleGridStyle(this)">Equal Grid</span>
-      <span class="chip" data-g="thirds" onclick="toggleGridStyle(this)">Rule of Thirds</span>
-      <span class="chip" data-g="custom" onclick="toggleGridStyle(this)">Custom</span>
+      <span class="chip" data-g="equal"  onclick="gStyle(this)">Equal (4x4)</span>
+      <span class="chip" data-g="thirds" onclick="gStyle(this)">Thirds (3x3)</span>
+      <span class="chip" data-g="custom" onclick="gStyle(this)">Custom</span>
     </div>
-    <div id="customGridRow" class="sz-row" style="display:none">
+    <div class="sz" id="gCustom" style="display:none">
       <label>Rows</label>
-      <input type="number" id="gridRows" value="4" min="1" max="20" oninput="redrawAll()">
-      <span>x</span>
-      <input type="number" id="gridCols" value="4" min="1" max="20" oninput="redrawAll()">
-      <label style="margin-left:4px">Cols</label>
+      <input type="number" id="gRows" value="4" min="1" max="20" oninput="draw()">
+      <label>x Cols</label>
+      <input type="number" id="gCols" value="4" min="1" max="20" oninput="draw()">
     </div>
     <div class="chips">
-      <span class="chip on" data-v="outline" onclick="toggleVis(this)">Outline</span>
-      <span class="chip on" data-v="grid"    onclick="toggleVis(this)">Grid Lines</span>
+      <span class="chip on" data-v="ol" onclick="vToggle(this)">Outline</span>
+      <span class="chip on" data-v="gr" onclick="vToggle(this)">Grid</span>
     </div>
-    <div class="sl-row">
-      <label>Grid</label>
-      <input type="range" id="slGridOp" min="5" max="100" value="40" oninput="onGridOp(this.value)">
-      <span class="sl-val" id="valGridOp">40%</span>
+    <div class="sl">
+      <span>Grid opacity</span>
+      <input type="range" min="5" max="100" value="40" oninput="V.gop=this.value/100;lbl('lGop',this.value+'%');draw()">
+      <b id="lGop">40%</b>
     </div>
   </div>
 
-</div><!-- /panel -->
+  <div class="pane" id="pSaved">
+    <div style="font-size:0.7rem;color:#888">Tap a thumbnail to view or download</div>
+    <div id="thumbs"><span class="empty-note">No saved crops yet</span></div>
+    <div class="row"><button class="warn" onclick="clearSaved()">Clear All</button></div>
+  </div>
 
-<input type="file" id="fileInput"     accept="image/*">
-<input type="file" id="fileInputCrop" accept="image/*">
-
-<div id="httpsWarn">
-  <h2>Camera Blocked</h2>
-  <p>You opened this file locally.<br><strong>Chrome blocks camera for local files.</strong><br>Use your GitHub Pages link instead.</p>
-  <ol>
-    <li>Upload as <span>index.html</span> to GitHub</li>
-    <li>Enable <span>GitHub Pages</span> in Settings</li>
-    <li>Open the <span>https://</span> link</li>
-  </ol>
-  <button onclick="document.getElementById('httpsWarn').style.display='none'"
-    style="margin-top:8px;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:12px 24px;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;">
-    Continue Anyway
-  </button>
 </div>
+
+<!-- FULL IMAGE VIEWER -->
+<div id="viewer">
+  <img id="vImg" src="" alt="">
+  <div class="row">
+    <button class="p" onclick="dlViewed()">Download</button>
+    <button class="s" onclick="closeViewer()">Close</button>
+  </div>
+</div>
+
+<input type="file" id="fileAR"   accept="image/*">
+<input type="file" id="fileCrop" accept="image/*">
 
 <script>
-var S = {
-  tab:'ar', stream:null, camOn:false, refImg:null,
-  outC:document.createElement('canvas'),
-  opacity:0.65, scale:1.0,
+// ── STATE ──────────────────────────────────
+var V = {
+  op:0.65, sc:1.0, gop:0.4,
+  gStyle:null, showOl:true, showGr:true,
   pins:[], pinMode:false,
-  gridStyle:null, showOutline:true, showGrid:true, gridOp:0.4,
-  cropBox:{x:0,y:0,w:0,h:0}, imgDisp:{x:0,y:0,w:0,h:0},
-  raf:null
+  lastCrop:null,
+  saves:[],
+  raf:null,
+  stream:null, camOn:false,
+  img:null, outC:null,
+  imgDisp:{x:0,y:0,w:0,h:0},
+  cropBox:{x:0,y:0,w:0,h:0}
 };
 
-var video     = document.getElementById('cameraFeed');
-var mainC     = document.getElementById('mainCanvas');
-var ctx       = mainC.getContext('2d');
-var cropUI    = document.getElementById('cropUI');
-var cropImgEl = document.getElementById('cropImgEl');
-var cropBoxEl = document.getElementById('cropBoxEl');
-var ph        = document.getElementById('placeholder');
-var pinHint   = document.getElementById('pinHint');
-var btnCam    = document.getElementById('btnCam');
+// ── DOM ─────────────────────────────────────
+var vid  = document.getElementById('vid');
+var cvs  = document.getElementById('cvs');
+var ctx  = cvs.getContext('2d');
+var cLayer = document.getElementById('cropLayer');
+var cImg  = document.getElementById('cimg');
+var cBox  = document.getElementById('cropBox');
+var ph    = document.getElementById('ph');
+var hint  = document.getElementById('hint');
+var bCam  = document.getElementById('bCam');
 
-// ── FILE INPUTS ──────────────────────────────────────────────
-document.getElementById('fileInput').addEventListener('change', function(ev) {
-  var f = ev.target.files[0]; if (!f) return;
-  var r = new FileReader();
-  r.onload = function(e) {
-    var img = new Image();
-    img.onload = function() {
-      S.refImg = img;
-      buildOutline(img);
-      ph.style.display = 'none';
-      if (S.camOn) { startLoop(); setStatus('Image loaded - outline active','g'); }
-      else { redrawAll(); setStatus('Image ready - tap Start Camera','o'); }
+// ── HELPERS ──────────────────────────────────
+function fi(id){ document.getElementById(id).click(); }
+function lbl(id,v){ document.getElementById(id).textContent=v; }
+function st(msg){ document.getElementById('status').textContent=msg; }
+
+// ── TABS ─────────────────────────────────────
+var tabIds = ['ar','crop','pin','grid','saved'];
+function tab(t) {
+  var btns = document.querySelectorAll('#tabs button');
+  var panes = document.querySelectorAll('.pane');
+  for(var i=0;i<tabIds.length;i++){
+    if(tabIds[i]===t){ btns[i].classList.add('active'); panes[i].classList.add('on'); }
+    else { btns[i].classList.remove('active'); panes[i].classList.remove('on'); }
+  }
+  cLayer.style.display = (t==='crop') ? 'block' : 'none';
+  if(V.pinMode && t!=='pin'){ V.pinMode=false; hint.style.display='none'; bPin(); }
+  draw();
+}
+
+// ── CAMERA ───────────────────────────────────
+function toggleCam(){
+  if(V.camOn) stopCam(); else startCam();
+}
+function startCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    st('Camera not supported'); return;
+  }
+  st('Requesting permission...');
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
+  .then(function(s){
+    V.stream=s; vid.srcObject=s;
+    vid.play().catch(function(){});
+    V.camOn=true;
+    bCam.textContent='Stop Camera';
+    bCam.classList.add('on');
+    ph.style.display='none';
+    st(V.img ? 'Camera on - outline active' : 'Camera on - load image');
+    if(V.img){ startLoop(); }
+    else { vid.addEventListener('canplay',startLoop,{once:true}); }
+  })
+  .catch(function(e){
+    st('Error: '+(e.name==='NotAllowedError'?'Permission denied':e.message));
+  });
+}
+function stopCam(){
+  cancelAnimationFrame(V.raf);
+  if(V.stream) V.stream.getTracks().forEach(function(t){t.stop();});
+  V.stream=null; vid.srcObject=null; V.camOn=false;
+  bCam.textContent='Start Camera'; bCam.classList.remove('on');
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  st('Camera stopped');
+}
+
+// ── FILE LOAD ────────────────────────────────
+document.getElementById('fileAR').addEventListener('change',function(e){
+  var f=e.target.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      V.img=img; buildOutline(img);
+      ph.style.display='none';
+      if(V.camOn){ startLoop(); st('Image loaded - outline active'); }
+      else { draw(); st('Image loaded - start camera'); }
     };
-    img.src = e.target.result;
+    img.src=ev.target.result;
   };
   r.readAsDataURL(f);
-  ev.target.value = '';
+  e.target.value='';
 });
 
-document.getElementById('fileInputCrop').addEventListener('change', function(ev) {
-  var f = ev.target.files[0]; if (!f) return;
-  var r = new FileReader();
-  r.onload = function(e) {
-    cropImgEl.onload = function() {
-      initCropBox();
-      document.getElementById('btnApplyCrop').style.display = 'flex';
-      document.getElementById('cropInfo').textContent = 'Drag corners to select crop area, then tap Apply Crop';
+document.getElementById('fileCrop').addEventListener('change',function(e){
+  var f=e.target.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    cImg.onload=function(){
+      initBox();
+      document.getElementById('bApply').style.display='flex';
+      document.getElementById('cropBtns').style.display='none';
+      document.getElementById('cropMsg').textContent='Drag corners to select area, then tap Apply Crop';
     };
-    cropImgEl.src = e.target.result;
+    cImg.src=ev.target.result;
   };
   r.readAsDataURL(f);
-  ev.target.value = '';
+  e.target.value='';
 });
 
-// ── TABS ─────────────────────────────────────────────────────
-function setTab(t) {
-  S.tab = t;
-  var ids = ['ar','crop','pin','grid'];
-  for (var i = 0; i < ids.length; i++) {
-    var id  = ids[i];
-    var cap = id.charAt(0).toUpperCase() + id.slice(1);
-    var tb  = document.getElementById('tab'  + cap);
-    var pn  = document.getElementById('pane' + cap);
-    if (id === t) { if(tb) tb.classList.add('active');    if(pn) pn.classList.add('active'); }
-    else          { if(tb) tb.classList.remove('active'); if(pn) pn.classList.remove('active'); }
+// ── OUTLINE ──────────────────────────────────
+function buildOutline(img){
+  var oc=document.createElement('canvas');
+  oc.width=img.width; oc.height=img.height;
+  var ox=oc.getContext('2d');
+  ox.drawImage(img,0,0);
+  var s=ox.getImageData(0,0,oc.width,oc.height);
+  var d=ox.createImageData(oc.width,oc.height);
+  var W=oc.width,H=oc.height,sd=s.data,dd=d.data;
+  function g(x,y){var i=(y*W+x)*4;return 0.299*sd[i]+0.587*sd[i+1]+0.114*sd[i+2];}
+  for(var y=1;y<H-1;y++) for(var x=1;x<W-1;x++){
+    var gx=-g(x-1,y-1)-2*g(x-1,y)-g(x-1,y+1)+g(x+1,y-1)+2*g(x+1,y)+g(x+1,y+1);
+    var gy=-g(x-1,y-1)-2*g(x,y-1)-g(x+1,y-1)+g(x-1,y+1)+2*g(x,y+1)+g(x+1,y+1);
+    var m=Math.min(255,Math.sqrt(gx*gx+gy*gy)*1.5);
+    var i=(y*W+x)*4;
+    dd[i]=dd[i+1]=dd[i+2]=255;
+    dd[i+3]=m>22?Math.min(255,m*1.7):0;
   }
-  cropUI.style.display = (t === 'crop') ? 'block' : 'none';
-  if (S.pinMode) {
-    S.pinMode = false;
-    document.getElementById('btnPinMode').classList.remove('on');
-    mainC.style.cursor = 'default';
-    pinHint.style.display = 'none';
-  }
-  redrawAll();
+  ox.putImageData(d,0,0);
+  V.outC=oc;
 }
 
-// ── CAMERA ───────────────────────────────────────────────────
-function toggleCamera() {
-  if (S.camOn) stopCamera(); else startCamera();
-}
-
-function startCamera() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    setStatus('Camera not supported in this browser',''); return;
-  }
-  setStatus('Requesting camera permission...','o');
-  navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' } } })
-    .then(function(stream) {
-      S.stream = stream;
-      video.srcObject = stream;
-      video.setAttribute('playsinline','true');
-      video.muted = true;
-      video.play().catch(function(){});
-      S.camOn = true;
-      btnCam.textContent = 'Stop Camera';
-      btnCam.classList.add('on');
-      ph.style.display = 'none';
-      if (S.refImg && S.outC.width) {
-        setStatus('Camera on - outline active','g');
-        if (video.readyState >= 2) startLoop();
-        else video.addEventListener('canplay', startLoop, {once:true});
-      } else {
-        setStatus('Camera on - load an image','g');
-      }
-    })
-    .catch(function(e) {
-      var m = e.name==='NotAllowedError'  ? 'Permission denied - check browser settings' :
-              e.name==='NotFoundError'    ? 'No camera found' :
-              e.name==='NotReadableError' ? 'Camera busy - close other apps' :
-              (e.message || 'Unknown error');
-      setStatus('Error: ' + m,'');
-    });
-}
-
-function stopCamera() {
-  cancelAnimationFrame(S.raf);
-  if (S.stream) { S.stream.getTracks().forEach(function(t){ t.stop(); }); S.stream=null; }
-  video.srcObject = null; S.camOn = false;
-  btnCam.textContent = 'Start Camera'; btnCam.classList.remove('on');
-  ctx.clearRect(0,0,mainC.width,mainC.height);
-  setStatus('Camera stopped','');
-}
-
-// ── OUTLINE (Sobel) ──────────────────────────────────────────
-function buildOutline(img) {
-  var oc = S.outC, octx = oc.getContext('2d');
-  oc.width = img.width; oc.height = img.height;
-  octx.drawImage(img,0,0);
-  var src = octx.getImageData(0,0,oc.width,oc.height);
-  var dst = octx.createImageData(oc.width,oc.height);
-  var d=src.data, o=dst.data, W=oc.width, H=oc.height;
-  function gv(x,y){ var i=(y*W+x)*4; return 0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; }
-  for (var y=1;y<H-1;y++) for (var x=1;x<W-1;x++) {
-    var gx=-gv(x-1,y-1)-2*gv(x-1,y)-gv(x-1,y+1)+gv(x+1,y-1)+2*gv(x+1,y)+gv(x+1,y+1);
-    var gy=-gv(x-1,y-1)-2*gv(x,y-1)-gv(x+1,y-1)+gv(x-1,y+1)+2*gv(x,y+1)+gv(x+1,y+1);
-    var mag=Math.min(255,Math.sqrt(gx*gx+gy*gy)*1.5);
-    var i2=(y*W+x)*4;
-    o[i2]=255; o[i2+1]=255; o[i2+2]=255;
-    o[i2+3]=mag>22?Math.min(255,mag*1.7):0;
-  }
-  octx.putImageData(dst,0,0);
-}
-
-// ── RENDER ───────────────────────────────────────────────────
-function startLoop() {
-  cancelAnimationFrame(S.raf);
-  function loop(){ redrawAll(); S.raf=requestAnimationFrame(loop); }
+// ── RENDER ───────────────────────────────────
+function startLoop(){
+  cancelAnimationFrame(V.raf);
+  function loop(){ draw(); V.raf=requestAnimationFrame(loop); }
   loop();
 }
 
-function redrawAll() {
-  var vw=mainC.offsetWidth, vh=mainC.offsetHeight;
-  mainC.width=vw; mainC.height=vh;
+function draw(){
+  var vw=cvs.offsetWidth,vh=cvs.offsetHeight;
+  cvs.width=vw; cvs.height=vh;
   ctx.clearRect(0,0,vw,vh);
-  if (!S.refImg||!S.outC.width) return;
-  var ar=S.outC.width/S.outC.height, bw, bh;
-  if (ar>vw/vh){ bw=vw*S.scale; bh=bw/ar; } else { bh=vh*S.scale; bw=bh*ar; }
-  if (S.pins.length===4) { drawPinned(vw,vh,bw,bh); }
-  else { drawRect((vw-bw)/2,(vh-bh)/2,bw,bh); }
+  if(!V.img||!V.outC) return;
+  var ar=V.outC.width/V.outC.height, bw, bh;
+  if(ar>vw/vh){bw=vw*V.sc;bh=bw/ar;}else{bh=vh*V.sc;bw=bh*ar;}
+  if(V.pins.length===4) drawPinned(vw,vh,bw,bh);
+  else drawRect((vw-bw)/2,(vh-bh)/2,bw,bh);
 }
 
-function drawRect(bx,by,bw,bh) {
-  if (S.showOutline&&S.outC.width){ ctx.globalAlpha=S.opacity; ctx.drawImage(S.outC,bx,by,bw,bh); ctx.globalAlpha=1; }
-  if (S.gridStyle&&S.showGrid) drawGrid(bx,by,bw,bh);
-  drawPinDots();
+function drawRect(bx,by,bw,bh){
+  if(V.showOl&&V.outC){ctx.globalAlpha=V.op;ctx.drawImage(V.outC,bx,by,bw,bh);ctx.globalAlpha=1;}
+  if(V.gStyle&&V.showGr) drawGrid(bx,by,bw,bh);
+  drawDots();
 }
 
-function drawPinned(vw,vh,bw,bh) {
-  var tmp=document.createElement('canvas'); tmp.width=vw; tmp.height=vh;
-  var tc=tmp.getContext('2d'), p=S.pins;
-  if (S.showOutline&&S.outC.width){ tc.globalAlpha=S.opacity; perspDraw(tc,S.outC,p,bw,bh); tc.globalAlpha=1; }
-  ctx.drawImage(tmp,0,0);
-  if (S.gridStyle&&S.showGrid) drawGridPinned(p);
-  drawPinDots();
+function drawPinned(vw,vh,bw,bh){
+  var t=document.createElement('canvas');t.width=vw;t.height=vh;
+  var tc=t.getContext('2d'),p=V.pins;
+  if(V.showOl&&V.outC){tc.globalAlpha=V.op;pDraw(tc,V.outC,p,bw,bh);tc.globalAlpha=1;}
+  ctx.drawImage(t,0,0);
+  if(V.gStyle&&V.showGr) drawGridP(p);
+  drawDots();
 }
 
-function perspDraw(tc,src,p,sw,sh) {
-  drawTri(tc,src, 0,0,sw,0,0,sh, p[0].x,p[0].y,p[1].x,p[1].y,p[2].x,p[2].y);
-  drawTri(tc,src, sw,0,0,sh,sw,sh, p[1].x,p[1].y,p[2].x,p[2].y,p[3].x,p[3].y);
+function pDraw(tc,src,p,sw,sh){
+  tri(tc,src,0,0,sw,0,0,sh,p[0].x,p[0].y,p[1].x,p[1].y,p[2].x,p[2].y);
+  tri(tc,src,sw,0,0,sh,sw,sh,p[1].x,p[1].y,p[2].x,p[2].y,p[3].x,p[3].y);
 }
 
-function drawTri(tc,img, sx1,sy1,sx2,sy2,sx3,sy3, dx1,dy1,dx2,dy2,dx3,dy3) {
+function tri(tc,img,sx1,sy1,sx2,sy2,sx3,sy3,dx1,dy1,dx2,dy2,dx3,dy3){
   tc.save();
-  tc.beginPath(); tc.moveTo(dx1,dy1); tc.lineTo(dx2,dy2); tc.lineTo(dx3,dy3); tc.closePath(); tc.clip();
+  tc.beginPath();tc.moveTo(dx1,dy1);tc.lineTo(dx2,dy2);tc.lineTo(dx3,dy3);tc.closePath();tc.clip();
   var dn=sy1*(sx3-sx2)+sy2*(sx1-sx3)+sy3*(sx2-sx1);
-  if (Math.abs(dn)<0.001){tc.restore();return;}
+  if(Math.abs(dn)<0.001){tc.restore();return;}
   var a=((dy1-dy3)*(sx2-sx3)-(dy2-dy3)*(sx1-sx3))/dn;
   var b=((dy1-dy3)*(sy2-sy3)-(dy2-dy3)*(sy1-sy3))/(-dn);
   var c=dy1-a*sx1-b*sy1;
-  var d2=((dx1-dx3)*(sx2-sx3)-(dx2-dx3)*(sx1-sx3))/dn;
-  var e=((dx1-dx3)*(sy2-sy3)-(dx2-dx3)*(sy1-sy3))/(-dn);
-  var f=dx1-d2*sx1-e*sy1;
-  tc.transform(d2/img.width,a/img.height,e/img.width,b/img.height,f,c);
+  var d=((dx1-dx3)*(sx2-sx3)-(dx2-dx3)*(sx1-sx3))/dn;
+  var e2=((dx1-dx3)*(sy2-sy3)-(dx2-dx3)*(sy1-sy3))/(-dn);
+  var f=dx1-d*sx1-e2*sy1;
+  tc.transform(d/img.width,a/img.height,e2/img.width,b/img.height,f,c);
   tc.drawImage(img,0,0);
   tc.restore();
 }
 
-function drawPinDots() {
-  for (var i=0;i<S.pins.length;i++) {
-    var p=S.pins[i];
-    ctx.beginPath(); ctx.arc(p.x,p.y,10,0,Math.PI*2);
-    ctx.fillStyle='rgba(232,66,10,0.85)'; ctx.fill();
-    ctx.fillStyle='#fff'; ctx.font='bold 11px sans-serif';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
+function drawDots(){
+  for(var i=0;i<V.pins.length;i++){
+    var p=V.pins[i];
+    ctx.beginPath();ctx.arc(p.x,p.y,11,0,Math.PI*2);
+    ctx.fillStyle='rgba(232,66,10,0.9)';ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(i+1,p.x,p.y);
   }
 }
 
-function drawGrid(bx,by,bw,bh) {
-  ctx.save(); ctx.globalAlpha=S.gridOp; ctx.strokeStyle='rgba(245,240,232,0.9)'; ctx.lineWidth=1;
-  var rows=3,cols=3;
-  if(S.gridStyle==='equal'){rows=4;cols=4;}
-  else if(S.gridStyle==='custom'){rows=parseInt(document.getElementById('gridRows').value)||4;cols=parseInt(document.getElementById('gridCols').value)||4;}
-  for(var i=1;i<cols;i++){var x=bx+bw*i/cols;ctx.beginPath();ctx.moveTo(x,by);ctx.lineTo(x,by+bh);ctx.stroke();}
-  for(var j=1;j<rows;j++){var y=by+bh*j/rows;ctx.beginPath();ctx.moveTo(bx,y);ctx.lineTo(bx+bw,y);ctx.stroke();}
+function rc(g){ return g==='custom'?parseInt(document.getElementById('gRows').value)||4:g==='equal'?4:3; }
+function cc(g){ return g==='custom'?parseInt(document.getElementById('gCols').value)||4:g==='equal'?4:3; }
+
+function drawGrid(bx,by,bw,bh){
+  ctx.save();ctx.globalAlpha=V.gop;ctx.strokeStyle='rgba(240,235,224,0.85)';ctx.lineWidth=1;
+  var r=rc(V.gStyle),c=cc(V.gStyle);
+  for(var i=1;i<c;i++){var x=bx+bw*i/c;ctx.beginPath();ctx.moveTo(x,by);ctx.lineTo(x,by+bh);ctx.stroke();}
+  for(var j=1;j<r;j++){var y=by+bh*j/r;ctx.beginPath();ctx.moveTo(bx,y);ctx.lineTo(bx+bw,y);ctx.stroke();}
   ctx.restore();
 }
 
-function drawGridPinned(p) {
-  ctx.save(); ctx.globalAlpha=S.gridOp; ctx.strokeStyle='rgba(245,240,232,0.9)'; ctx.lineWidth=1;
-  var rows=3,cols=3;
-  if(S.gridStyle==='equal'){rows=4;cols=4;}
-  if(S.gridStyle==='custom'){rows=parseInt(document.getElementById('gridRows').value)||4;cols=parseInt(document.getElementById('gridCols').value)||4;}
+function drawGridP(p){
+  ctx.save();ctx.globalAlpha=V.gop;ctx.strokeStyle='rgba(240,235,224,0.85)';ctx.lineWidth=1;
+  var r=rc(V.gStyle),c=cc(V.gStyle);
   function lp(a,b,t){return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};}
-  for(var i=1;i<cols;i++){var t=i/cols;var s=lp(p[0],p[1],t),en=lp(p[2],p[3],t);ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(en.x,en.y);ctx.stroke();}
-  for(var j=1;j<rows;j++){var t2=j/rows;var s2=lp(p[0],p[2],t2),en2=lp(p[1],p[3],t2);ctx.beginPath();ctx.moveTo(s2.x,s2.y);ctx.lineTo(en2.x,en2.y);ctx.stroke();}
+  for(var i=1;i<c;i++){var t=i/c;var s=lp(p[0],p[1],t),e=lp(p[2],p[3],t);ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(e.x,e.y);ctx.stroke();}
+  for(var j=1;j<r;j++){var t2=j/r;var s2=lp(p[0],p[2],t2),e2=lp(p[1],p[3],t2);ctx.beginPath();ctx.moveTo(s2.x,s2.y);ctx.lineTo(e2.x,e2.y);ctx.stroke();}
   ctx.restore();
 }
 
-// ── CROP ─────────────────────────────────────────────────────
-function initCropBox() {
-  if (!cropImgEl.naturalWidth) return;
-  var vw=cropUI.offsetWidth, vh=cropUI.offsetHeight;
-  var iw=cropImgEl.naturalWidth, ih=cropImgEl.naturalHeight;
-  var cw=parseFloat(document.getElementById('canvasW').value)||30;
-  var ch=parseFloat(document.getElementById('canvasH').value)||40;
-  var car=cw/ch, dw, dh;
+// ── CROP ─────────────────────────────────────
+function initBox(){
+  if(!cImg.naturalWidth)return;
+  var vw=cLayer.offsetWidth,vh=cLayer.offsetHeight;
+  var iw=cImg.naturalWidth,ih=cImg.naturalHeight;
+  var car=(parseFloat(document.getElementById('cw').value)||30)/(parseFloat(document.getElementById('ch2').value)||40);
+  var dw,dh;
   if(iw/ih>vw/vh){dw=vw;dh=vw/(iw/ih);}else{dh=vh;dw=vh*(iw/ih);}
-  var dx=(vw-dw)/2, dy=(vh-dh)/2;
-  S.imgDisp={x:dx,y:dy,w:dw,h:dh};
-  cropImgEl.style.left=dx+'px'; cropImgEl.style.top=dy+'px';
-  cropImgEl.style.width=dw+'px'; cropImgEl.style.height=dh+'px';
+  var dx=(vw-dw)/2,dy=(vh-dh)/2;
+  V.imgDisp={x:dx,y:dy,w:dw,h:dh};
+  cImg.style.left=dx+'px';cImg.style.top=dy+'px';
+  cImg.style.width=dw+'px';cImg.style.height=dh+'px';
   var bw,bh;
   if(car>dw/dh){bw=dw*0.88;bh=bw/car;}else{bh=dh*0.88;bw=bh*car;}
-  S.cropBox={x:dx+(dw-bw)/2,y:dy+(dh-bh)/2,w:bw,h:bh};
-  syncCropBox();
+  V.cropBox={x:dx+(dw-bw)/2,y:dy+(dh-bh)/2,w:bw,h:bh};
+  syncBox();
 }
 
-function syncCropBox() {
-  var b=S.cropBox;
-  cropBoxEl.style.left=b.x+'px'; cropBoxEl.style.top=b.y+'px';
-  cropBoxEl.style.width=b.w+'px'; cropBoxEl.style.height=b.h+'px';
+function syncBox(){
+  var b=V.cropBox;
+  cBox.style.left=b.x+'px';cBox.style.top=b.y+'px';
+  cBox.style.width=b.w+'px';cBox.style.height=b.h+'px';
 }
 
-var _cd=null;
-function evXY(e){var s=e.touches?e.touches[0]:e;return{x:s.clientX,y:s.clientY};}
+var _d=null;
+function xy(e){var s=e.touches?e.touches[0]:e;return{x:s.clientX,y:s.clientY};}
 
-cropBoxEl.addEventListener('pointerdown',function(e){
-  var h=(e.target&&e.target.dataset)?e.target.dataset.h:null;
-  var pt=evXY(e);
-  _cd={type:h?'handle':'move',h:h||'',x:pt.x,y:pt.y,
-       box:{x:S.cropBox.x,y:S.cropBox.y,w:S.cropBox.w,h:S.cropBox.h}};
-  e.stopPropagation(); e.preventDefault();
+cBox.addEventListener('pointerdown',function(e){
+  var h=e.target.dataset?e.target.dataset.h:null;
+  var p=xy(e);
+  _d={h:h||'',x:p.x,y:p.y,b:{x:V.cropBox.x,y:V.cropBox.y,w:V.cropBox.w,h:V.cropBox.h}};
+  e.stopPropagation();e.preventDefault();
 });
 document.addEventListener('pointermove',function(e){
-  if(!_cd)return;
-  var pt=evXY(e),ddx=pt.x-_cd.x,ddy=pt.y-_cd.y;
-  var b={x:_cd.box.x,y:_cd.box.y,w:_cd.box.w,h:_cd.box.h},img=S.imgDisp;
-  var car=(parseFloat(document.getElementById('canvasW').value)||30)/(parseFloat(document.getElementById('canvasH').value)||40);
-  if(_cd.type==='move'){
-    b.x=Math.max(img.x,Math.min(img.x+img.w-b.w,_cd.box.x+ddx));
-    b.y=Math.max(img.y,Math.min(img.y+img.h-b.h,_cd.box.y+ddy));
+  if(!_d)return;
+  var p=xy(e),dx=p.x-_d.x,dy=p.y-_d.y,b=Object.assign({},_d.b),img=V.imgDisp;
+  var car=(parseFloat(document.getElementById('cw').value)||30)/(parseFloat(document.getElementById('ch2').value)||40);
+  if(!_d.h){
+    b.x=Math.max(img.x,Math.min(img.x+img.w-b.w,_d.b.x+dx));
+    b.y=Math.max(img.y,Math.min(img.y+img.h-b.h,_d.b.y+dy));
   }else{
-    var ob=_cd.box,hh=_cd.h;
-    if(hh==='br'){b.w=Math.max(40,ob.w+ddx);b.h=b.w/car;}
-    else if(hh==='bl'){b.w=Math.max(40,ob.w-ddx);b.h=b.w/car;b.x=ob.x+ob.w-b.w;}
-    else if(hh==='tr'){b.w=Math.max(40,ob.w+ddx);b.h=b.w/car;b.y=ob.y+ob.h-b.h;}
-    else if(hh==='tl'){b.w=Math.max(40,ob.w-ddx);b.h=b.w/car;b.x=ob.x+ob.w-b.w;b.y=ob.y+ob.h-b.h;}
-    b.x=Math.max(img.x,b.x); b.y=Math.max(img.y,b.y);
+    var h=_d.h,ob=_d.b;
+    if(h==='br'){b.w=Math.max(40,ob.w+dx);b.h=b.w/car;}
+    else if(h==='bl'){b.w=Math.max(40,ob.w-dx);b.h=b.w/car;b.x=ob.x+ob.w-b.w;}
+    else if(h==='tr'){b.w=Math.max(40,ob.w+dx);b.h=b.w/car;b.y=ob.y+ob.h-b.h;}
+    else if(h==='tl'){b.w=Math.max(40,ob.w-dx);b.h=b.w/car;b.x=ob.x+ob.w-b.w;b.y=ob.y+ob.h-b.h;}
+    b.x=Math.max(img.x,b.x);b.y=Math.max(img.y,b.y);
     if(b.x+b.w>img.x+img.w)b.w=img.x+img.w-b.x;
     if(b.y+b.h>img.y+img.h)b.h=img.y+img.h-b.y;
   }
-  S.cropBox=b; syncCropBox();
+  V.cropBox=b;syncBox();
 });
-document.addEventListener('pointerup',    function(){_cd=null;});
-document.addEventListener('pointercancel',function(){_cd=null;});
+document.addEventListener('pointerup',function(){_d=null;});
+document.addEventListener('pointercancel',function(){_d=null;});
 
-function applyCrop() {
-  if(!cropImgEl.naturalWidth)return;
-  var img=S.imgDisp,b=S.cropBox;
-  var sx=Math.round((b.x-img.x)*(cropImgEl.naturalWidth/img.w));
-  var sy=Math.round((b.y-img.y)*(cropImgEl.naturalHeight/img.h));
-  var sw=Math.round(b.w*(cropImgEl.naturalWidth/img.w));
-  var sh=Math.round(b.h*(cropImgEl.naturalHeight/img.h));
-  var tmp=document.createElement('canvas'); tmp.width=sw; tmp.height=sh;
-  tmp.getContext('2d').drawImage(cropImgEl,sx,sy,sw,sh,0,0,sw,sh);
+function applyCrop(){
+  if(!cImg.naturalWidth)return;
+  var img=V.imgDisp,b=V.cropBox;
+  var sx=Math.round((b.x-img.x)*(cImg.naturalWidth/img.w));
+  var sy=Math.round((b.y-img.y)*(cImg.naturalHeight/img.h));
+  var sw=Math.round(b.w*(cImg.naturalWidth/img.w));
+  var sh=Math.round(b.h*(cImg.naturalHeight/img.h));
+  var t=document.createElement('canvas');t.width=sw;t.height=sh;
+  t.getContext('2d').drawImage(cImg,sx,sy,sw,sh,0,0,sw,sh);
+  V.lastCrop=t.toDataURL('image/jpeg',0.92);
   var cropped=new Image();
   cropped.onload=function(){
-    S.refImg=cropped; buildOutline(cropped);
-    cropUI.style.display='none';
-    setTab('ar');
-    if(S.camOn){startLoop();setStatus('Cropped image active','g');}
-    else{redrawAll();setStatus('Crop applied - tap Start Camera','o');}
+    V.img=cropped;buildOutline(cropped);
+    document.getElementById('cropBtns').style.display='flex';
+    document.getElementById('cropMsg').textContent='Crop applied. Download or save, then go to AR tab.';
+    tab('ar');
+    if(V.camOn){startLoop();st('Cropped image active');}
+    else{draw();st('Crop applied - start camera');}
   };
-  cropped.src=tmp.toDataURL();
+  cropped.src=V.lastCrop;
 }
 
-// ── PIN ──────────────────────────────────────────────────────
-function togglePinMode() {
-  S.pinMode=!S.pinMode;
-  var btn=document.getElementById('btnPinMode');
-  if(S.pinMode) btn.classList.add('on'); else btn.classList.remove('on');
-  pinHint.style.display=S.pinMode?'block':'none';
-  pinHint.textContent=S.pins.length<4?'Tap corner '+(S.pins.length+1)+' of 4':'All corners set';
-  mainC.style.cursor=S.pinMode?'crosshair':'default';
+function dlCrop(){
+  if(!V.lastCrop){alert('Apply a crop first');return;}
+  dl(V.lastCrop,'paintguide-crop.jpg');
 }
 
-mainC.addEventListener('click',function(e){
-  if(!S.pinMode)return;
-  var r=mainC.getBoundingClientRect();
-  var x=(e.clientX-r.left)*(mainC.width/r.width);
-  var y=(e.clientY-r.top)*(mainC.height/r.height);
-  if(S.pins.length<4){
-    S.pins.push({x:x,y:y});
-    if(S.pins.length===4){
-      S.pinMode=false;
-      document.getElementById('btnPinMode').classList.remove('on');
-      mainC.style.cursor='default'; pinHint.style.display='none';
-      document.getElementById('pinMsg').textContent='4 corners locked';
-      document.getElementById('pinDot').className='dot g';
-    } else {
-      pinHint.textContent='Tap corner '+(S.pins.length+1)+' of 4';
-      document.getElementById('pinMsg').textContent=S.pins.length+' of 4 tapped';
+function saveCrop(){
+  if(!V.lastCrop){alert('Apply a crop first');return;}
+  V.saves.push(V.lastCrop);
+  renderThumbs();
+  document.getElementById('cropMsg').textContent='Saved! See the Saved tab.';
+}
+
+function dl(dataURL,name){
+  var a=document.createElement('a');a.href=dataURL;a.download=name;a.click();
+}
+
+// ── SAVED ────────────────────────────────────
+function renderThumbs(){
+  var el=document.getElementById('thumbs');
+  el.innerHTML='';
+  if(!V.saves.length){el.innerHTML='<span class="empty-note">No saved crops yet</span>';return;}
+  for(var i=0;i<V.saves.length;i++){
+    (function(idx){
+      var img=document.createElement('img');
+      img.src=V.saves[idx];
+      img.onclick=function(){openViewer(V.saves[idx]);};
+      el.appendChild(img);
+    })(i);
+  }
+}
+
+function clearSaved(){V.saves=[];renderThumbs();}
+
+function openViewer(src){
+  document.getElementById('vImg').src=src;
+  document.getElementById('viewer').style.display='flex';
+}
+function closeViewer(){
+  document.getElementById('viewer').style.display='none';
+  document.getElementById('vImg').src='';
+}
+function dlViewed(){
+  var src=document.getElementById('vImg').src;
+  if(src) dl(src,'paintguide-crop.jpg');
+}
+
+// ── PIN ──────────────────────────────────────
+function togglePin(){
+  V.pinMode=!V.pinMode;
+  var b=document.getElementById('bPin');
+  if(V.pinMode){b.classList.add('on');hint.style.display='block';hint.textContent='Tap corner '+(V.pins.length+1)+' of 4';}
+  else{b.classList.remove('on');hint.style.display='none';}
+  cvs.style.cursor=V.pinMode?'crosshair':'default';
+}
+
+cvs.addEventListener('click',function(e){
+  if(!V.pinMode)return;
+  var r=cvs.getBoundingClientRect();
+  var x=(e.clientX-r.left)*(cvs.width/r.width);
+  var y=(e.clientY-r.top)*(cvs.height/r.height);
+  if(V.pins.length<4){
+    V.pins.push({x:x,y:y});
+    if(V.pins.length===4){
+      V.pinMode=false;
+      document.getElementById('bPin').classList.remove('on');
+      cvs.style.cursor='default';hint.style.display='none';
+      document.getElementById('pinStatus').textContent='4 corners set - outline locked to canvas';
+    }else{
+      hint.textContent='Tap corner '+(V.pins.length+1)+' of 4';
+      document.getElementById('pinStatus').textContent=V.pins.length+' of 4 corners set';
     }
-    redrawAll();
+    draw();
   }
 });
 
 function clearPins(){
-  S.pins=[];
-  document.getElementById('pinMsg').textContent='No corners set';
-  document.getElementById('pinDot').className='dot';
-  redrawAll();
+  V.pins=[];V.pinMode=false;
+  document.getElementById('bPin').classList.remove('on');
+  cvs.style.cursor='default';hint.style.display='none';
+  document.getElementById('pinStatus').textContent='No corners set';
+  draw();
 }
 
-// ── GRID ─────────────────────────────────────────────────────
-function toggleGridStyle(el){
-  var g=el.dataset.g, wasOn=el.classList.contains('on');
-  var chips=document.querySelectorAll('[data-g]');
-  for(var i=0;i<chips.length;i++) chips[i].classList.remove('on');
-  if(!wasOn){el.classList.add('on');S.gridStyle=g;}else S.gridStyle=null;
-  document.getElementById('customGridRow').style.display=(S.gridStyle==='custom')?'flex':'none';
-  redrawAll();
+// ── GRID ─────────────────────────────────────
+function gStyle(el){
+  var g=el.dataset.g,was=el.classList.contains('on');
+  document.querySelectorAll('[data-g]').forEach(function(e){e.classList.remove('on');});
+  if(!was){el.classList.add('on');V.gStyle=g;}else V.gStyle=null;
+  document.getElementById('gCustom').style.display=(V.gStyle==='custom')?'flex':'none';
+  draw();
 }
 
-function toggleVis(el){
+function vToggle(el){
   el.classList.toggle('on');
-  S.showOutline=document.querySelector('[data-v="outline"]').classList.contains('on');
-  S.showGrid=document.querySelector('[data-v="grid"]').classList.contains('on');
-  redrawAll();
+  V.showOl=document.querySelector('[data-v="ol"]').classList.contains('on');
+  V.showGr=document.querySelector('[data-v="gr"]').classList.contains('on');
+  draw();
 }
 
-// ── SLIDERS ──────────────────────────────────────────────────
-function onOpacity(v){S.opacity=v/100;document.getElementById('valOpacity').textContent=v+'%';redrawAll();}
-function onScale(v){S.scale=v/100;document.getElementById('valScale').textContent=v+'%';redrawAll();}
-function onGridOp(v){S.gridOp=v/100;document.getElementById('valGridOp').textContent=v+'%';redrawAll();}
-
-// ── CLEAR ────────────────────────────────────────────────────
-function clearAll(){
-  S.refImg=null; S.outC.width=0;
-  cancelAnimationFrame(S.raf);
-  ctx.clearRect(0,0,mainC.width,mainC.height);
-  cropUI.style.display='none'; cropImgEl.src='';
-  document.getElementById('btnApplyCrop').style.display='none';
-  document.getElementById('cropInfo').textContent='Load an image, then drag the orange box to select your crop area';
-  if(!S.camOn) ph.style.display='flex';
-  setStatus(S.camOn?'Camera on - load image':'Start camera, then load image',S.camOn?'g':'');
+// ── RESET ────────────────────────────────────
+function resetAll(){
+  V.img=null;V.outC=null;V.pins=[];V.pinMode=false;V.lastCrop=null;
+  V.gStyle=null;V.op=0.65;V.sc=1.0;V.gop=0.4;
+  cancelAnimationFrame(V.raf);
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  cLayer.style.display='none';cImg.src='';
+  hint.style.display='none';cvs.style.cursor='default';
+  document.getElementById('bPin').classList.remove('on');
+  document.getElementById('pinStatus').textContent='No corners set';
+  document.getElementById('bApply').style.display='none';
+  document.getElementById('cropBtns').style.display='none';
+  document.getElementById('cropMsg').textContent='Load an image then drag the box to select your crop area';
+  document.querySelectorAll('[data-g]').forEach(function(e){e.classList.remove('on');});
+  document.getElementById('gCustom').style.display='none';
+  if(!V.camOn) ph.style.display='flex';
+  st(V.camOn?'Reset - load image':'Reset - start camera then load image');
+  tab('ar');
 }
 
-function setStatus(m,c){
-  document.getElementById('sMsg').textContent=m;
-  document.getElementById('sDot').className='dot'+(c?' '+c:'');
-}
-
-// ── INIT ─────────────────────────────────────────────────────
-window.addEventListener('resize',function(){redrawAll();});
+window.addEventListener('resize',function(){draw();});
 if(location.protocol==='file:'){
-  document.getElementById('httpsWarn').style.display='flex';
+  alert('Camera requires HTTPS. Open via GitHub Pages, not local file.');
 }
 </script>
 </body>
