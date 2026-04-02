@@ -6,45 +6,289 @@
 <title>PaintGuide AR</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
-
-:root {
-  --ink: #0d0d0d;
-  --paper: #f5f0e8;
-  --accent: #e8420a;
-  --muted: #8a8070;
-}
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { height:100%; overflow:hidden; }
-body {
-  background:var(--ink); color:var(--paper);
-  font-family:'DM Sans',sans-serif;
-  display:flex; flex-direction:column; height:100dvh;
-}
+:root { --ink:#0d0d0d; --paper:#f5f0e8; --accent:#e8420a; --muted:#8a8070; }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--ink);color:var(--paper);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;height:100dvh;}
 
 /* HEADER */
-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:12px 16px 8px; flex-shrink:0; background:var(--ink); z-index:30;
-}
-header h1 { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:2px; }
-header h1 span { color:var(--accent); }
-
-.tabs {
-  display:flex;
-  background:rgba(245,240,232,0.08);
-  border:1px solid rgba(245,240,232,0.15);
-  border-radius:20px; overflow:hidden;
-}
-.tabs button {
-  background:none; border:none; color:var(--muted);
-  font-family:'DM Sans',sans-serif; font-size:0.68rem; font-weight:500;
-  padding:6px 11px; cursor:pointer;
-  text-transform:uppercase; letter-spacing:0.5px;
-  transition:all 0.2s;
-}
-.tabs button.active { background:var(--accent); color:#fff; border-radius:18px; }
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px;flex-shrink:0;background:var(--ink);z-index:30;}
+header h1{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;}
+header h1 span{color:var(--accent);}
+.tabs{display:flex;background:rgba(245,240,232,0.08);border:1px solid rgba(245,240,232,0.15);border-radius:20px;overflow:hidden;}
+.tabs button{background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.65rem;font-weight:500;padding:5px 10px;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;transition:all 0.2s;}
+.tabs button.active{background:var(--accent);color:#fff;border-radius:18px;}
 
 /* VIEWPORT */
+.viewport{position:relative;flex:1;overflow:hidden;background:#0a0a0a;min-height:0;}
+#cameraFeed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+#mainCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;}
+
+/* PLACEHOLDER */
+.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);z-index:1;text-align:center;padding:24px;pointer-events:none;}
+.ph svg{opacity:0.2;}
+.ph p{font-size:0.82rem;line-height:1.7;}
+.ph strong{color:var(--paper);}
+
+/* CROP UI */
+#cropUI{position:absolute;inset:0;z-index:5;display:none;}
+#cropImgEl{position:absolute;transform-origin:top left;user-select:none;pointer-events:none;}
+#cropBoxEl{position:absolute;border:2px solid var(--accent);box-shadow:0 0 0 9999px rgba(13,13,13,0.55);cursor:move;touch-action:none;}
+.cc{position:absolute;width:26px;height:26px;border-color:var(--accent);border-style:solid;touch-action:none;cursor:pointer;}
+.cc.tl{top:-2px;left:-2px;border-width:3px 0 0 3px;}
+.cc.tr{top:-2px;right:-2px;border-width:3px 3px 0 0;}
+.cc.bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;}
+.cc.br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;}
+
+/* PIN HINT */
+#pinHint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(13,13,13,0.88);border:1px solid var(--accent);border-radius:8px;padding:7px 16px;font-size:0.75rem;color:var(--paper);z-index:10;pointer-events:none;white-space:nowrap;display:none;}
+
+/* SAVED IMAGE VIEWER */
+#imgViewer{display:none;position:fixed;inset:0;z-index:200;background:rgba(13,13,13,0.97);flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;}
+#imgViewer img{max-width:100%;max-height:70vh;border-radius:6px;object-fit:contain;}
+#imgViewer .viewer-btns{display:flex;gap:10px;}
+
+/* PANEL */
+.panel{background:var(--ink);border-top:1px solid rgba(245,240,232,0.07);padding:10px 14px 20px;flex-shrink:0;z-index:30;}
+.pane{display:none;flex-direction:column;gap:8px;}
+.pane.active{display:flex;}
+.row{display:flex;gap:7px;align-items:center;}
+
+/* BUTTONS */
+.btn{border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-weight:500;font-size:0.78rem;padding:11px 12px;cursor:pointer;transition:transform 0.15s,background 0.15s;white-space:nowrap;}
+.btn:active{transform:scale(0.96);}
+.btn-p{background:var(--accent);color:#fff;flex:1;}
+.btn-s{background:rgba(245,240,232,0.08);color:var(--paper);border:1px solid rgba(245,240,232,0.12);flex:1;}
+.btn-s.on{background:rgba(232,66,10,0.18);border-color:var(--accent);color:var(--accent);}
+.btn-warn{background:rgba(232,66,10,0.15);color:var(--accent);border:1px solid rgba(232,66,10,0.3);flex:1;}
+.btn-sq{background:rgba(245,240,232,0.08);color:var(--paper);border:1px solid rgba(245,240,232,0.12);width:42px;height:42px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:0.78rem;flex-shrink:0;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+/* SLIDERS */
+.sl-row{display:flex;align-items:center;gap:8px;}
+.sl-row label{font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);width:46px;flex-shrink:0;}
+.sl-row input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:rgba(245,240,232,0.18);border-radius:2px;outline:none;}
+.sl-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.sl-val{font-size:0.7rem;color:var(--paper);width:34px;text-align:right;flex-shrink:0;}
+
+/* CHIPS */
+.chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:rgba(245,240,232,0.07);border:1px solid rgba(245,240,232,0.12);border-radius:7px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.7rem;padding:5px 10px;cursor:pointer;transition:all 0.18s;}
+.chip.on{background:rgba(232,66,10,0.2);border-color:var(--accent);color:var(--paper);}
+
+/* SIZE INPUTS */
+.sz-row{display:flex;align-items:center;gap:7px;background:rgba(245,240,232,0.05);border:1px solid rgba(245,240,232,0.1);border-radius:9px;padding:8px 12px;}
+.sz-row label{font-size:0.62rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);white-space:nowrap;}
+.sz-row input{background:none;border:none;border-bottom:1px solid rgba(245,240,232,0.22);color:var(--paper);font-family:'DM Sans',sans-serif;font-size:0.86rem;width:46px;text-align:center;outline:none;padding:2px 3px;}
+.sz-row span{color:var(--muted);font-size:0.7rem;}
+
+/* STATUS */
+.status{display:flex;align-items:center;gap:6px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all 0.3s;}
+.dot.g{background:#4caf50;box-shadow:0 0 5px #4caf50;}
+.dot.o{background:#ff9800;box-shadow:0 0 5px #ff9800;}
+.smsg{font-size:0.7rem;color:var(--muted);}
+.info{font-size:0.68rem;color:var(--muted);line-height:1.6;}
+.info strong{color:var(--paper);}
+
+/* SAVED THUMBS */
+#savedList{display:flex;gap:8px;overflow-x:auto;padding:2px 0;}
+#savedList:empty::after{content:'No saved crops yet';font-size:0.68rem;color:var(--muted);}
+.thumb{width:54px;height:54px;border-radius:6px;object-fit:cover;border:2px solid rgba(245,240,232,0.15);cursor:pointer;flex-shrink:0;}
+.thumb:active{border-color:var(--accent);}
+
+/* HTTPS WARNING */
+#httpsWarn{display:none;position:fixed;inset:0;z-index:999;background:rgba(13,13,13,0.97);flex-direction:column;align-items:center;justify-content:center;padding:26px;text-align:center;gap:14px;}
+#httpsWarn h2{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--accent);letter-spacing:2px;}
+#httpsWarn p{font-size:0.82rem;line-height:1.7;color:var(--muted);max-width:300px;}
+#httpsWarn p strong{color:var(--paper);}
+#httpsWarn ol{text-align:left;font-size:0.8rem;color:var(--paper);line-height:2.2;padding-left:20px;}
+#httpsWarn ol span{color:var(--accent);}
+
+#fileInput,#fileInputCrop{display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Paint<span>Guide</span></h1>
+  <div class="tabs">
+    <button id="tabAR"   class="active" onclick="setTab('ar')">AR</button>
+    <button id="tabCrop" onclick="setTab('crop')">Crop</button>
+    <button id="tabPin"  onclick="setTab('pin')">Pin</button>
+    <button id="tabGrid" onclick="setTab('grid')">Grid</button>
+    <button id="tabSaved" onclick="setTab('saved')">Saved</button>
+  </div>
+</header>
+
+<div class="viewport" id="viewport">
+  <video id="cameraFeed" autoplay playsinline muted></video>
+  <canvas id="mainCanvas"></canvas>
+  <div id="cropUI">
+    <img id="cropImgEl" alt="">
+    <div id="cropBoxEl">
+      <div class="cc tl" data-h="tl"></div>
+      <div class="cc tr" data-h="tr"></div>
+      <div class="cc bl" data-h="bl"></div>
+      <div class="cc br" data-h="br"></div>
+    </div>
+  </div>
+  <div id="pinHint"></div>
+  <div class="ph" id="placeholder">
+    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <path d="m21 15-5-5L5 21"/>
+    </svg>
+    <p>Tap <strong>Start Camera</strong><br>then <strong>Load Image</strong></p>
+  </div>
+</div>
+
+<!-- SAVED IMAGE FULL VIEWER -->
+<div id="imgViewer">
+  <img id="viewerImg" src="" alt="">
+  <div class="viewer-btns">
+    <button class="btn btn-p" onclick="downloadViewed()">Download</button>
+    <button class="btn btn-s" onclick="closeViewer()">Close</button>
+  </div>
+</div>
+
+<div class="panel">
+
+  <!-- AR -->
+  <div class="pane active" id="paneAR">
+    <div class="row">
+      <button class="btn btn-p" id="btnCam" onclick="toggleCamera()">Start Camera</button>
+      <button class="btn btn-s" onclick="document.getElementById('fileInput').click()">Load Image</button>
+      <button class="btn btn-warn" onclick="resetAll()">Reset All</button>
+    </div>
+    <div class="sl-row">
+      <label>Opacity</label>
+      <input type="range" id="slOpacity" min="5" max="100" value="65" oninput="onOpacity(this.value)">
+      <span class="sl-val" id="valOpacity">65%</span>
+    </div>
+    <div class="sl-row">
+      <label>Size</label>
+      <input type="range" id="slScale" min="20" max="150" value="100" oninput="onScale(this.value)">
+      <span class="sl-val" id="valScale">100%</span>
+    </div>
+    <div class="status">
+      <span class="dot" id="sDot"></span>
+      <span class="smsg" id="sMsg">Start camera, then load image</span>
+    </div>
+  </div>
+
+  <!-- CROP -->
+  <div class="pane" id="paneCrop">
+    <div class="sz-row">
+      <label>Canvas</label>
+      <input type="number" id="canvasW" value="30" min="1" oninput="initCropBox()">
+      <span>x</span>
+      <input type="number" id="canvasH" value="40" min="1" oninput="initCropBox()">
+      <span>cm</span>
+    </div>
+    <div class="row">
+      <button class="btn btn-p" onclick="document.getElementById('fileInputCrop').click()">Load Image to Crop</button>
+      <button class="btn btn-s" id="btnApplyCrop" onclick="applyCrop()" style="display:none">Apply Crop</button>
+    </div>
+    <div class="row" id="cropActionRow" style="display:none">
+      <button class="btn btn-s" onclick="downloadCrop()">Download Crop</button>
+      <button class="btn btn-s" onclick="saveCropToGallery()">Save to Gallery</button>
+    </div>
+    <div class="info" id="cropInfo">Load an image, then drag the orange box to select your crop area</div>
+  </div>
+
+  <!-- PIN -->
+  <div class="pane" id="panePin">
+    <div class="row">
+      <button class="btn btn-p" id="btnPinMode" onclick="togglePinMode()">Tap 4 Canvas Corners</button>
+      <button class="btn btn-s" onclick="clearPins()">Clear Pins</button>
+    </div>
+    <div class="info">
+      Point camera at your canvas. Tap <strong>Tap 4 Canvas Corners</strong>, then tap each corner of your canvas on the screen in order: top-left, top-right, bottom-left, bottom-right. The outline will warp to fill your canvas exactly. Keep the phone still after pinning.
+    </div>
+    <div class="status">
+      <span class="dot" id="pinDot"></span>
+      <span class="smsg" id="pinMsg">No corners set</span>
+    </div>
+  </div>
+
+  <!-- GRID -->
+  <div class="pane" id="paneGrid">
+    <div class="chips">
+      <span class="chip" data-g="equal"  onclick="toggleGridStyle(this)">Equal Grid</span>
+      <span class="chip" data-g="thirds" onclick="toggleGridStyle(this)">Rule of Thirds</span>
+      <span class="chip" data-g="custom" onclick="toggleGridStyle(this)">Custom</span>
+    </div>
+    <div id="customGridRow" class="sz-row" style="display:none">
+      <label>Rows</label>
+      <input type="number" id="gridRows" value="4" min="1" max="20" oninput="redrawAll()">
+      <span>x</span>
+      <input type="number" id="gridCols" value="4" min="1" max="20" oninput="redrawAll()">
+      <label style="margin-left:4px">Cols</label>
+    </div>
+    <div class="chips">
+      <span class="chip on" data-v="outline" onclick="toggleVis(this)">Outline</span>
+      <span class="chip on" data-v="grid"    onclick="toggleVis(this)">Grid Lines</span>
+    </div>
+    <div class="sl-row">
+      <label>Grid</label>
+      <input type="range" id="slGridOp" min="5" max="100" value="40" oninput="onGridOp(this.value)">
+      <span class="sl-val" id="valGridOp">40%</span>
+    </div>
+  </div>
+
+  <!-- SAVED -->
+  <div class="pane" id="paneSaved">
+    <div class="info">Tap a saved crop to view full size or download. Saved here in this session.</div>
+    <div id="savedList"></div>
+    <div class="row" style="margin-top:2px">
+      <button class="btn btn-warn" onclick="clearSaved()">Clear All Saved</button>
+    </div>
+  </div>
+
+</div><!-- /panel -->
+
+<input type="file" id="fileInput"     accept="image/*">
+<input type="file" id="fileInputCrop" accept="image/*">
+
+<div id="httpsWarn">
+  <h2>Camera Blocked</h2>
+  <p>Opened locally.<br><strong>Chrome blocks camera for local files.</strong><br>Use your GitHub Pages link.</p>
+  <ol>
+    <li>Upload as <span>index.html</span> to GitHub</li>
+    <li>Enable <span>GitHub Pages</span> in repo Settings</li>
+    <li>Open the <span>https://</span> link on your phone</li>
+  </ol>
+  <button onclick="document.getElementById('httpsWarn').style.display='none'"
+    style="margin-top:8px;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:12px 24px;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;">
+    Continue Anyway
+  </button>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+var S = {
+  tab:'ar',
+  stream:null, camOn:false,
+  refImg:null,
+  outC:document.createElement('canvas'),
+  opacity:0.65, scale:1.0,
+  pins:[], pinMode:false,
+  gridStyle:null, showOutline:true, showGrid:true, gridOp:0.4,
+  cropBox:{x:0,y:0,w:0,h:0}, imgDisp:{x:0,y:0,w:0,h:0},
+  lastCropDataURL:null,   // most recent crop as data URL
+  savedCrops:[],          // array of {dataURL, name}
+  raf:null
+};
+
+// ============================================================
+// DOM
+// ============================================================
+var video      = document.getElementById('cameraFeed');
+var mainC      = document.getElementById('mainCanvas');
+var ctx        = mainC.getContext('/* VIEWPORT */
 .viewport { position:relative; flex:1; overflow:hidden; background:#0a0a0a; min-height:0; }
 #cameraFeed { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
 #mainCanvas { position:absolute; inset:0; width:100%; height:100%; z-index:2; }
