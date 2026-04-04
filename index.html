@@ -262,7 +262,12 @@ function tab(t) {
     else { btns[i].classList.remove('active'); panes[i].classList.remove('on'); }
   }
   cLayer.style.display = (t==='crop') ? 'block' : 'none';
-  if(V.pinMode && t!=='pin'){ V.pinMode=false; hint.style.display='none'; bPin(); }
+  if(V.pinMode && t!=='pin'){
+    V.pinMode=false;
+    hint.style.display='none';
+    cvs.style.cursor='default';
+    document.getElementById('bPin').classList.remove('on');
+  }
   draw();
 }
 
@@ -508,15 +513,16 @@ function applyCrop(){
   V.lastCrop=t.toDataURL('image/jpeg',0.92);
   var cropped=new Image();
   cropped.onload=function(){
-    V.img=cropped;buildOutline(cropped);
+    V.img=cropped;
+    buildOutline(cropped);
+    document.getElementById('bApply').style.display='none';
     document.getElementById('cropBtns').style.display='flex';
-    document.getElementById('cropMsg').textContent='Crop applied. Download or save, then go to AR tab.';
-    tab('ar');
-    if(V.camOn){startLoop();st('Cropped image active');}
-    else{draw();st('Crop applied - start camera');}
+    document.getElementById('cropMsg').textContent='Done! Download or Save below, then tap AR tab to see outline.';
   };
   cropped.src=V.lastCrop;
 }
+
+
 
 function dlCrop(){
   if(!V.lastCrop){alert('Apply a crop first');return;}
