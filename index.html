@@ -5,96 +5,74 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>PaintGuide</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-html, body { height:100%; background:#111; color:#f0ebe0; font-family:sans-serif; overflow:hidden; }
-body { display:flex; flex-direction:column; height:100dvh; }
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;background:#111;color:#f0ebe0;font-family:sans-serif;overflow:hidden;}
+body{display:flex;flex-direction:column;height:100dvh;}
 
-#viewport {
-  position:relative; flex:1; background:#000; overflow:hidden; min-height:0;
-}
-video {
-  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-}
-canvas {
-  position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none;
-}
+#viewport{position:relative;flex:1;background:#000;overflow:hidden;min-height:0;}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;}
 
-/* TABS */
-#tabs {
-  display:flex; background:#1a1a1a; border-bottom:1px solid #333;
-}
-#tabs button {
-  flex:1; background:none; border:none; color:#888; font-size:0.75rem;
-  padding:10px 4px; cursor:pointer; font-family:sans-serif;
-  text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid transparent;
-}
-#tabs button.active { color:#e8420a; border-bottom-color:#e8420a; }
+#tabs{display:flex;background:#1a1a1a;border-bottom:1px solid #333;flex-shrink:0;}
+#tabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#666;font-size:0.72rem;padding:10px 2px;cursor:pointer;font-family:sans-serif;text-transform:uppercase;}
+#tabs button.active{color:#e8420a;border-bottom-color:#e8420a;}
 
-/* PANELS */
-#panel { background:#1a1a1a; padding:12px 14px 20px; flex-shrink:0; }
-.pane { display:none; flex-direction:column; gap:10px; }
-.pane.on { display:flex; }
+#panel{background:#1a1a1a;padding:11px 13px 18px;flex-shrink:0;}
+.pane{display:none;flex-direction:column;gap:9px;}
+.pane.on{display:flex;}
 
-/* BUTTONS */
-.row { display:flex; gap:8px; }
-button.p { background:#e8420a; color:#fff; border:none; border-radius:8px; padding:12px 16px; font-size:0.82rem; cursor:pointer; flex:1; font-family:sans-serif; }
-button.s { background:#2a2a2a; color:#f0ebe0; border:1px solid #444; border-radius:8px; padding:12px 16px; font-size:0.82rem; cursor:pointer; flex:1; font-family:sans-serif; }
-button.s.on { background:#3a1a10; border-color:#e8420a; color:#e8420a; }
-button.warn { background:#2a1a10; color:#e8420a; border:1px solid #e8420a44; border-radius:8px; padding:12px 16px; font-size:0.82rem; cursor:pointer; flex:1; font-family:sans-serif; }
+.row{display:flex;gap:7px;}
+button.p{background:#e8420a;color:#fff;border:none;border-radius:8px;padding:12px 14px;font-size:0.8rem;cursor:pointer;flex:1;font-family:sans-serif;}
+button.s{background:#252525;color:#f0ebe0;border:1px solid #3a3a3a;border-radius:8px;padding:12px 14px;font-size:0.8rem;cursor:pointer;flex:1;font-family:sans-serif;}
+button.s.on{background:#2a1208;border-color:#e8420a;color:#e8420a;}
+button.warn{background:#1e0e06;color:#e8420a;border:1px solid #e8420a55;border-radius:8px;padding:12px 14px;font-size:0.8rem;cursor:pointer;flex:1;font-family:sans-serif;}
 
-/* SLIDERS */
-.sl { display:flex; align-items:center; gap:8px; }
-.sl span { font-size:0.7rem; color:#888; width:50px; flex-shrink:0; }
-.sl input { flex:1; accent-color:#e8420a; }
-.sl b { font-size:0.7rem; color:#f0ebe0; width:36px; text-align:right; }
+.sl{display:flex;align-items:center;gap:8px;}
+.sl span{font-size:0.68rem;color:#666;width:52px;flex-shrink:0;}
+.sl input[type=range]{flex:1;accent-color:#e8420a;cursor:pointer;}
+.sl b{font-size:0.68rem;color:#f0ebe0;width:36px;text-align:right;flex-shrink:0;}
 
-/* STATUS */
-#status { font-size:0.72rem; color:#888; padding-top:2px; }
-#status b { color:#f0ebe0; }
+.chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#252525;border:1px solid #3a3a3a;border-radius:6px;color:#666;font-size:0.7rem;padding:5px 10px;cursor:pointer;}
+.chip.on{background:#2a1208;border-color:#e8420a;color:#f0ebe0;}
 
-/* CROP */
-#cropLayer { position:absolute; inset:0; z-index:5; display:none; }
-#cropLayer img { position:absolute; pointer-events:none; user-select:none; }
-#cropBox {
-  position:absolute; border:2px solid #e8420a;
-  box-shadow:0 0 0 9999px rgba(0,0,0,0.55);
-  touch-action:none; cursor:move;
-}
-.ch { position:absolute; width:28px; height:28px; border:3px solid #e8420a; touch-action:none; }
-.ch.tl { top:-2px; left:-2px;   border-right:none; border-bottom:none; }
-.ch.tr { top:-2px; right:-2px;  border-left:none;  border-bottom:none; }
-.ch.bl { bottom:-2px; left:-2px;  border-right:none; border-top:none; }
-.ch.br { bottom:-2px; right:-2px; border-left:none;  border-top:none; }
+.sz{display:flex;align-items:center;gap:6px;}
+.sz label{font-size:0.68rem;color:#666;}
+.sz input[type=number]{background:#252525;border:1px solid #3a3a3a;color:#f0ebe0;border-radius:6px;padding:5px 7px;width:52px;text-align:center;font-size:0.83rem;font-family:sans-serif;}
 
-/* GRID SIZE INPUTS */
-.sz { display:flex; align-items:center; gap:6px; }
-.sz label { font-size:0.7rem; color:#888; }
-.sz input[type=number] { background:#2a2a2a; border:1px solid #444; color:#f0ebe0; border-radius:6px; padding:4px 6px; width:52px; text-align:center; font-size:0.85rem; font-family:sans-serif; }
+.note{font-size:0.68rem;color:#666;line-height:1.65;}
+.note b{color:#f0ebe0;}
 
-/* CHIPS */
-.chips { display:flex; gap:6px; flex-wrap:wrap; }
-.chip { background:#2a2a2a; border:1px solid #444; border-radius:6px; color:#888; font-size:0.7rem; padding:5px 10px; cursor:pointer; }
-.chip.on { background:#3a1a10; border-color:#e8420a; color:#f0ebe0; }
+/* CROP LAYER */
+#cropLayer{position:absolute;inset:0;z-index:5;display:none;}
+#cimg{position:absolute;pointer-events:none;user-select:none;}
+#cropBox{position:absolute;border:2px solid #e8420a;box-shadow:0 0 0 9999px rgba(0,0,0,0.55);touch-action:none;cursor:move;}
+.ch{position:absolute;width:28px;height:28px;border:3px solid #e8420a;touch-action:none;}
+.ch.tl{top:-2px;left:-2px;border-right:none;border-bottom:none;}
+.ch.tr{top:-2px;right:-2px;border-left:none;border-bottom:none;}
+.ch.bl{bottom:-2px;left:-2px;border-right:none;border-top:none;}
+.ch.br{bottom:-2px;right:-2px;border-left:none;border-top:none;}
 
-/* VIEWER */
-#viewer { display:none; position:fixed; inset:0; z-index:99; background:#000; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px; }
-#viewer img { max-width:100%; max-height:72vh; object-fit:contain; border-radius:6px; }
-#viewer .row { width:100%; max-width:400px; }
+/* PIN HINT - sits over viewport */
+#hint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.88);border:1px solid #e8420a;border-radius:8px;padding:8px 18px;font-size:0.78rem;color:#f0ebe0;z-index:20;pointer-events:none;white-space:nowrap;display:none;}
+
+/* PIN TAP OVERLAY - invisible layer to catch taps when in pin mode */
+#pinOverlay{position:absolute;inset:0;z-index:15;display:none;cursor:crosshair;}
+
+#ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
+#ph p{color:#444;font-size:0.85rem;text-align:center;line-height:2;}
+#ph b{color:#666;}
 
 /* SAVED THUMBS */
-#thumbs { display:flex; gap:8px; overflow-x:auto; min-height:60px; align-items:center; }
-#thumbs img { width:56px; height:56px; object-fit:cover; border-radius:6px; border:2px solid #333; cursor:pointer; flex-shrink:0; }
-#thumbs img:active { border-color:#e8420a; }
-.empty-note { font-size:0.7rem; color:#555; }
+#thumbs{display:flex;gap:8px;overflow-x:auto;min-height:58px;align-items:center;}
+#thumbs img{width:56px;height:56px;object-fit:cover;border-radius:6px;border:2px solid #333;cursor:pointer;flex-shrink:0;}
 
-/* HINT */
-#hint { position:absolute; top:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.85); border:1px solid #e8420a; border-radius:8px; padding:7px 16px; font-size:0.75rem; color:#f0ebe0; z-index:10; white-space:nowrap; display:none; }
+/* FULL VIEWER */
+#viewer{display:none;position:fixed;inset:0;z-index:99;background:#000;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;}
+#viewer img{max-width:100%;max-height:72vh;object-fit:contain;border-radius:6px;}
+#viewer .row{width:100%;max-width:400px;}
 
-#ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:1; pointer-events:none; }
-#ph p { color:#555; font-size:0.85rem; text-align:center; line-height:1.8; }
-#ph b { color:#888; }
-
-#fileAR, #fileCrop { display:none; }
+#fileAR,#fileCrop{display:none;}
 </style>
 </head>
 <body>
@@ -110,6 +88,9 @@ button.warn { background:#2a1a10; color:#e8420a; border:1px solid #e8420a44; bor
 <div id="viewport">
   <video id="vid" autoplay playsinline muted></video>
   <canvas id="cvs"></canvas>
+
+  <!-- invisible overlay that catches pin taps -->
+  <div id="pinOverlay"></div>
 
   <div id="cropLayer">
     <img id="cimg" alt="">
@@ -130,7 +111,7 @@ button.warn { background:#2a1a10; color:#e8420a; border:1px solid #e8420a44; bor
   <div class="pane on" id="pAR">
     <div class="row">
       <button class="p" id="bCam" onclick="toggleCam()">Start Camera</button>
-      <button class="s" onclick="fi('fileAR')">Load Image</button>
+      <button class="s" onclick="document.getElementById('fileAR').click()">Load Image</button>
       <button class="warn" onclick="resetAll()">Reset</button>
     </div>
     <div class="sl">
@@ -143,7 +124,7 @@ button.warn { background:#2a1a10; color:#e8420a; border:1px solid #e8420a44; bor
       <input type="range" min="20" max="150" value="100" oninput="V.sc=this.value/100;lbl('lSc',this.value+'%');draw()">
       <b id="lSc">100%</b>
     </div>
-    <div id="status">Start camera, then load image</div>
+    <div id="st" class="note">Start camera, then load image</div>
   </div>
 
   <div class="pane" id="pCrop">
@@ -155,14 +136,14 @@ button.warn { background:#2a1a10; color:#e8420a; border:1px solid #e8420a44; bor
       <label>cm</label>
     </div>
     <div class="row">
-      <button class="p" onclick="fi('fileCrop')">Load Image</button>
+      <button class="p" onclick="document.getElementById('fileCrop').click()">Load Image</button>
       <button class="s" id="bApply" onclick="applyCrop()" style="display:none">Apply Crop</button>
     </div>
     <div class="row" id="cropBtns" style="display:none">
       <button class="s" onclick="dlCrop()">Download</button>
       <button class="s" onclick="saveCrop()">Save to Gallery</button>
     </div>
-    <div id="cropMsg" style="font-size:0.7rem;color:#888;line-height:1.6">Load an image then drag the box to select your crop area</div>
+    <div id="cropMsg" class="note">Load an image, drag the box, then tap Apply Crop</div>
   </div>
 
   <div class="pane" id="pPin">
@@ -170,18 +151,20 @@ button.warn { background:#2a1a10; color:#e8420a; border:1px solid #e8420a44; bor
       <button class="p" id="bPin" onclick="togglePin()">Tap 4 Corners</button>
       <button class="s" onclick="clearPins()">Clear</button>
     </div>
-    <div style="font-size:0.7rem;color:#888;line-height:1.7">
-      Point camera at canvas. Tap <b style="color:#f0ebe0">Tap 4 Corners</b> then tap:<br>
-      1 Top-left &nbsp; 2 Top-right &nbsp; 3 Bottom-left &nbsp; 4 Bottom-right.<br>
-      Outline warps to fill your canvas. Keep phone still.
+    <div class="note">
+      1. Load image and start camera first.<br>
+      2. Tap <b>Tap 4 Corners</b> — button turns orange.<br>
+      3. Tap each corner of your canvas on screen:<br>
+      &nbsp;&nbsp; Top-left, Top-right, Bottom-left, Bottom-right.<br>
+      4. Outline warps to your canvas. Keep phone still.
     </div>
-    <div id="pinStatus" style="font-size:0.7rem;color:#888">No corners set</div>
+    <div id="pinSt" class="note">No corners set</div>
   </div>
 
   <div class="pane" id="pGrid">
     <div class="chips">
-      <span class="chip" data-g="equal"  onclick="gStyle(this)">Equal (4x4)</span>
-      <span class="chip" data-g="thirds" onclick="gStyle(this)">Thirds (3x3)</span>
+      <span class="chip" data-g="equal"  onclick="gStyle(this)">Equal 4x4</span>
+      <span class="chip" data-g="thirds" onclick="gStyle(this)">Thirds 3x3</span>
       <span class="chip" data-g="custom" onclick="gStyle(this)">Custom</span>
     </div>
     <div class="sz" id="gCustom" style="display:none">
@@ -191,8 +174,8 @@ button.warn { background:#2a1a10; color:#e8420a; border:1px solid #e8420a44; bor
       <input type="number" id="gCols" value="4" min="1" max="20" oninput="draw()">
     </div>
     <div class="chips">
-      <span class="chip on" data-v="ol" onclick="vToggle(this)">Outline</span>
-      <span class="chip on" data-v="gr" onclick="vToggle(this)">Grid</span>
+      <span class="chip on" data-v="ol" onclick="vTog(this)">Outline</span>
+      <span class="chip on" data-v="gr" onclick="vTog(this)">Grid</span>
     </div>
     <div class="sl">
       <span>Grid opacity</span>
@@ -202,14 +185,13 @@ button.warn { background:#2a1a10; color:#e8420a; border:1px solid #e8420a44; bor
   </div>
 
   <div class="pane" id="pSaved">
-    <div style="font-size:0.7rem;color:#888">Tap a thumbnail to view or download</div>
-    <div id="thumbs"><span class="empty-note">No saved crops yet</span></div>
+    <div class="note">Tap thumbnail to view full size or download</div>
+    <div id="thumbs"><span style="font-size:0.7rem;color:#444">No saved crops yet</span></div>
     <div class="row"><button class="warn" onclick="clearSaved()">Clear All</button></div>
   </div>
 
 </div>
 
-<!-- FULL IMAGE VIEWER -->
 <div id="viewer">
   <img id="vImg" src="" alt="">
   <div class="row">
@@ -222,80 +204,86 @@ button.warn { background:#2a1a10; color:#e8420a; border:1px solid #e8420a44; bor
 <input type="file" id="fileCrop" accept="image/*">
 
 <script>
-// ── STATE ──────────────────────────────────
+// ── STATE ────────────────────────────────────────────────────
 var V = {
   op:0.65, sc:1.0, gop:0.4,
   gStyle:null, showOl:true, showGr:true,
   pins:[], pinMode:false,
-  lastCrop:null,
-  saves:[],
-  raf:null,
-  stream:null, camOn:false,
+  lastCrop:null, saves:[],
+  raf:null, stream:null, camOn:false,
   img:null, outC:null,
   imgDisp:{x:0,y:0,w:0,h:0},
   cropBox:{x:0,y:0,w:0,h:0}
 };
 
-// ── DOM ─────────────────────────────────────
-var vid  = document.getElementById('vid');
-var cvs  = document.getElementById('cvs');
-var ctx  = cvs.getContext('2d');
-var cLayer = document.getElementById('cropLayer');
-var cImg  = document.getElementById('cimg');
-var cBox  = document.getElementById('cropBox');
-var ph    = document.getElementById('ph');
-var hint  = document.getElementById('hint');
-var bCam  = document.getElementById('bCam');
+// ── DOM ──────────────────────────────────────────────────────
+var vid      = document.getElementById('vid');
+var cvs      = document.getElementById('cvs');
+var ctx      = cvs.getContext('2d');
+var cLayer   = document.getElementById('cropLayer');
+var cImg     = document.getElementById('cimg');
+var cBox     = document.getElementById('cropBox');
+var ph       = document.getElementById('ph');
+var hint     = document.getElementById('hint');
+var bCam     = document.getElementById('bCam');
+var pinOvl   = document.getElementById('pinOverlay');
 
-// ── HELPERS ──────────────────────────────────
-function fi(id){ document.getElementById(id).click(); }
+// ── HELPERS ──────────────────────────────────────────────────
 function lbl(id,v){ document.getElementById(id).textContent=v; }
-function st(msg){ document.getElementById('status').textContent=msg; }
+function st(msg){ document.getElementById('st').textContent=msg; }
 
-// ── TABS ─────────────────────────────────────
+// ── TABS ─────────────────────────────────────────────────────
 var tabIds = ['ar','crop','pin','grid','saved'];
+var paneIds = ['pAR','pCrop','pPin','pGrid','pSaved'];
+
 function tab(t) {
   var btns = document.querySelectorAll('#tabs button');
-  var panes = document.querySelectorAll('.pane');
   for(var i=0;i<tabIds.length;i++){
-    if(tabIds[i]===t){ btns[i].classList.add('active'); panes[i].classList.add('on'); }
-    else { btns[i].classList.remove('active'); panes[i].classList.remove('on'); }
+    var isActive = (tabIds[i]===t);
+    btns[i].classList.toggle('active', isActive);
+    document.getElementById(paneIds[i]).classList.toggle('on', isActive);
   }
+  // show crop layer only on crop tab
   cLayer.style.display = (t==='crop') ? 'block' : 'none';
+  // if leaving pin tab while in pin mode, cancel it
   if(V.pinMode && t!=='pin'){
-    V.pinMode=false;
-    hint.style.display='none';
-    cvs.style.cursor='default';
+    V.pinMode = false;
+    pinOvl.style.display = 'none';
+    hint.style.display = 'none';
     document.getElementById('bPin').classList.remove('on');
   }
   draw();
 }
 
-// ── CAMERA ───────────────────────────────────
+// ── CAMERA ───────────────────────────────────────────────────
 function toggleCam(){
   if(V.camOn) stopCam(); else startCam();
 }
+
 function startCam(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    st('Camera not supported'); return;
+    st('Camera not supported in this browser'); return;
   }
-  st('Requesting permission...');
+  st('Requesting camera permission...');
   navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
   .then(function(s){
-    V.stream=s; vid.srcObject=s;
+    V.stream=s;
+    vid.srcObject=s;
     vid.play().catch(function(){});
     V.camOn=true;
     bCam.textContent='Stop Camera';
     bCam.classList.add('on');
     ph.style.display='none';
-    st(V.img ? 'Camera on - outline active' : 'Camera on - load image');
-    if(V.img){ startLoop(); }
-    else { vid.addEventListener('canplay',startLoop,{once:true}); }
+    if(V.img){ startLoop(); st('Camera on - outline active'); }
+    else { st('Camera on - load image'); }
   })
   .catch(function(e){
-    st('Error: '+(e.name==='NotAllowedError'?'Permission denied':e.message));
+    var m = e.name==='NotAllowedError' ? 'Permission denied - check browser settings' :
+            e.name==='NotFoundError'   ? 'No camera found' : (e.message||'Error');
+    st('Camera error: '+m);
   });
 }
+
 function stopCam(){
   cancelAnimationFrame(V.raf);
   if(V.stream) V.stream.getTracks().forEach(function(t){t.stop();});
@@ -305,8 +293,8 @@ function stopCam(){
   st('Camera stopped');
 }
 
-// ── FILE LOAD ────────────────────────────────
-document.getElementById('fileAR').addEventListener('change',function(e){
+// ── FILE INPUTS ──────────────────────────────────────────────
+document.getElementById('fileAR').addEventListener('change', function(e){
   var f=e.target.files[0]; if(!f) return;
   var r=new FileReader();
   r.onload=function(ev){
@@ -323,7 +311,7 @@ document.getElementById('fileAR').addEventListener('change',function(e){
   e.target.value='';
 });
 
-document.getElementById('fileCrop').addEventListener('change',function(e){
+document.getElementById('fileCrop').addEventListener('change', function(e){
   var f=e.target.files[0]; if(!f) return;
   var r=new FileReader();
   r.onload=function(ev){
@@ -339,7 +327,7 @@ document.getElementById('fileCrop').addEventListener('change',function(e){
   e.target.value='';
 });
 
-// ── OUTLINE ──────────────────────────────────
+// ── OUTLINE (Sobel) ──────────────────────────────────────────
 function buildOutline(img){
   var oc=document.createElement('canvas');
   oc.width=img.width; oc.height=img.height;
@@ -361,7 +349,7 @@ function buildOutline(img){
   V.outC=oc;
 }
 
-// ── RENDER ───────────────────────────────────
+// ── RENDER ───────────────────────────────────────────────────
 function startLoop(){
   cancelAnimationFrame(V.raf);
   function loop(){ draw(); V.raf=requestAnimationFrame(loop); }
@@ -369,7 +357,7 @@ function startLoop(){
 }
 
 function draw(){
-  var vw=cvs.offsetWidth,vh=cvs.offsetHeight;
+  var vw=cvs.offsetWidth, vh=cvs.offsetHeight;
   cvs.width=vw; cvs.height=vh;
   ctx.clearRect(0,0,vw,vh);
   if(!V.img||!V.outC) return;
@@ -395,11 +383,11 @@ function drawPinned(vw,vh,bw,bh){
 }
 
 function pDraw(tc,src,p,sw,sh){
-  tri(tc,src,0,0,sw,0,0,sh,p[0].x,p[0].y,p[1].x,p[1].y,p[2].x,p[2].y);
-  tri(tc,src,sw,0,0,sh,sw,sh,p[1].x,p[1].y,p[2].x,p[2].y,p[3].x,p[3].y);
+  tri(tc,src, 0,0,sw,0,0,sh, p[0].x,p[0].y,p[1].x,p[1].y,p[2].x,p[2].y);
+  tri(tc,src, sw,0,0,sh,sw,sh, p[1].x,p[1].y,p[2].x,p[2].y,p[3].x,p[3].y);
 }
 
-function tri(tc,img,sx1,sy1,sx2,sy2,sx3,sy3,dx1,dy1,dx2,dy2,dx3,dy3){
+function tri(tc,img, sx1,sy1,sx2,sy2,sx3,sy3, dx1,dy1,dx2,dy2,dx3,dy3){
   tc.save();
   tc.beginPath();tc.moveTo(dx1,dy1);tc.lineTo(dx2,dy2);tc.lineTo(dx3,dy3);tc.closePath();tc.clip();
   var dn=sy1*(sx3-sx2)+sy2*(sx1-sx3)+sy3*(sx2-sx1);
@@ -407,10 +395,10 @@ function tri(tc,img,sx1,sy1,sx2,sy2,sx3,sy3,dx1,dy1,dx2,dy2,dx3,dy3){
   var a=((dy1-dy3)*(sx2-sx3)-(dy2-dy3)*(sx1-sx3))/dn;
   var b=((dy1-dy3)*(sy2-sy3)-(dy2-dy3)*(sy1-sy3))/(-dn);
   var c=dy1-a*sx1-b*sy1;
-  var d=((dx1-dx3)*(sx2-sx3)-(dx2-dx3)*(sx1-sx3))/dn;
-  var e2=((dx1-dx3)*(sy2-sy3)-(dx2-dx3)*(sy1-sy3))/(-dn);
-  var f=dx1-d*sx1-e2*sy1;
-  tc.transform(d/img.width,a/img.height,e2/img.width,b/img.height,f,c);
+  var dd=((dx1-dx3)*(sx2-sx3)-(dx2-dx3)*(sx1-sx3))/dn;
+  var e=((dx1-dx3)*(sy2-sy3)-(dx2-dx3)*(sy1-sy3))/(-dn);
+  var f=dx1-dd*sx1-e*sy1;
+  tc.transform(dd/img.width,a/img.height,e/img.width,b/img.height,f,c);
   tc.drawImage(img,0,0);
   tc.restore();
 }
@@ -418,46 +406,53 @@ function tri(tc,img,sx1,sy1,sx2,sy2,sx3,sy3,dx1,dy1,dx2,dy2,dx3,dy3){
 function drawDots(){
   for(var i=0;i<V.pins.length;i++){
     var p=V.pins[i];
-    ctx.beginPath();ctx.arc(p.x,p.y,11,0,Math.PI*2);
+    ctx.beginPath();ctx.arc(p.x,p.y,12,0,Math.PI*2);
     ctx.fillStyle='rgba(232,66,10,0.9)';ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';
+    ctx.fillStyle='#fff';ctx.font='bold 12px sans-serif';
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(i+1,p.x,p.y);
   }
 }
 
-function rc(g){ return g==='custom'?parseInt(document.getElementById('gRows').value)||4:g==='equal'?4:3; }
-function cc(g){ return g==='custom'?parseInt(document.getElementById('gCols').value)||4:g==='equal'?4:3; }
+function gridRC(){
+  var r=3,c=3;
+  if(V.gStyle==='equal'){r=4;c=4;}
+  else if(V.gStyle==='custom'){
+    r=parseInt(document.getElementById('gRows').value)||4;
+    c=parseInt(document.getElementById('gCols').value)||4;
+  }
+  return{r:r,c:c};
+}
 
 function drawGrid(bx,by,bw,bh){
+  var rc=gridRC();
   ctx.save();ctx.globalAlpha=V.gop;ctx.strokeStyle='rgba(240,235,224,0.85)';ctx.lineWidth=1;
-  var r=rc(V.gStyle),c=cc(V.gStyle);
-  for(var i=1;i<c;i++){var x=bx+bw*i/c;ctx.beginPath();ctx.moveTo(x,by);ctx.lineTo(x,by+bh);ctx.stroke();}
-  for(var j=1;j<r;j++){var y=by+bh*j/r;ctx.beginPath();ctx.moveTo(bx,y);ctx.lineTo(bx+bw,y);ctx.stroke();}
+  for(var i=1;i<rc.c;i++){var x=bx+bw*i/rc.c;ctx.beginPath();ctx.moveTo(x,by);ctx.lineTo(x,by+bh);ctx.stroke();}
+  for(var j=1;j<rc.r;j++){var y=by+bh*j/rc.r;ctx.beginPath();ctx.moveTo(bx,y);ctx.lineTo(bx+bw,y);ctx.stroke();}
   ctx.restore();
 }
 
 function drawGridP(p){
+  var rc=gridRC();
   ctx.save();ctx.globalAlpha=V.gop;ctx.strokeStyle='rgba(240,235,224,0.85)';ctx.lineWidth=1;
-  var r=rc(V.gStyle),c=cc(V.gStyle);
   function lp(a,b,t){return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};}
-  for(var i=1;i<c;i++){var t=i/c;var s=lp(p[0],p[1],t),e=lp(p[2],p[3],t);ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(e.x,e.y);ctx.stroke();}
-  for(var j=1;j<r;j++){var t2=j/r;var s2=lp(p[0],p[2],t2),e2=lp(p[1],p[3],t2);ctx.beginPath();ctx.moveTo(s2.x,s2.y);ctx.lineTo(e2.x,e2.y);ctx.stroke();}
+  for(var i=1;i<rc.c;i++){var t=i/rc.c;var s=lp(p[0],p[1],t),e=lp(p[2],p[3],t);ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(e.x,e.y);ctx.stroke();}
+  for(var j=1;j<rc.r;j++){var t2=j/rc.r;var s2=lp(p[0],p[2],t2),e2=lp(p[1],p[3],t2);ctx.beginPath();ctx.moveTo(s2.x,s2.y);ctx.lineTo(e2.x,e2.y);ctx.stroke();}
   ctx.restore();
 }
 
-// ── CROP ─────────────────────────────────────
+// ── CROP ─────────────────────────────────────────────────────
 function initBox(){
-  if(!cImg.naturalWidth)return;
-  var vw=cLayer.offsetWidth,vh=cLayer.offsetHeight;
-  var iw=cImg.naturalWidth,ih=cImg.naturalHeight;
+  if(!cImg.naturalWidth) return;
+  var vw=cLayer.offsetWidth, vh=cLayer.offsetHeight;
+  var iw=cImg.naturalWidth, ih=cImg.naturalHeight;
   var car=(parseFloat(document.getElementById('cw').value)||30)/(parseFloat(document.getElementById('ch2').value)||40);
   var dw,dh;
   if(iw/ih>vw/vh){dw=vw;dh=vw/(iw/ih);}else{dh=vh;dw=vh*(iw/ih);}
-  var dx=(vw-dw)/2,dy=(vh-dh)/2;
+  var dx=(vw-dw)/2, dy=(vh-dh)/2;
   V.imgDisp={x:dx,y:dy,w:dw,h:dh};
-  cImg.style.left=dx+'px';cImg.style.top=dy+'px';
-  cImg.style.width=dw+'px';cImg.style.height=dh+'px';
+  cImg.style.left=dx+'px'; cImg.style.top=dy+'px';
+  cImg.style.width=dw+'px'; cImg.style.height=dh+'px';
   var bw,bh;
   if(car>dw/dh){bw=dw*0.88;bh=bw/car;}else{bh=dh*0.88;bw=bh*car;}
   V.cropBox={x:dx+(dw-bw)/2,y:dy+(dh-bh)/2,w:bw,h:bh};
@@ -466,8 +461,8 @@ function initBox(){
 
 function syncBox(){
   var b=V.cropBox;
-  cBox.style.left=b.x+'px';cBox.style.top=b.y+'px';
-  cBox.style.width=b.w+'px';cBox.style.height=b.h+'px';
+  cBox.style.left=b.x+'px'; cBox.style.top=b.y+'px';
+  cBox.style.width=b.w+'px'; cBox.style.height=b.h+'px';
 }
 
 var _d=null;
@@ -477,38 +472,40 @@ cBox.addEventListener('pointerdown',function(e){
   var h=e.target.dataset?e.target.dataset.h:null;
   var p=xy(e);
   _d={h:h||'',x:p.x,y:p.y,b:{x:V.cropBox.x,y:V.cropBox.y,w:V.cropBox.w,h:V.cropBox.h}};
-  e.stopPropagation();e.preventDefault();
+  e.stopPropagation(); e.preventDefault();
 });
+
 document.addEventListener('pointermove',function(e){
-  if(!_d)return;
-  var p=xy(e),dx=p.x-_d.x,dy=p.y-_d.y,b=Object.assign({},_d.b),img=V.imgDisp;
+  if(!_d) return;
+  var p=xy(e),dx=p.x-_d.x,dy=p.y-_d.y;
+  var b=Object.assign({},_d.b), img=V.imgDisp;
   var car=(parseFloat(document.getElementById('cw').value)||30)/(parseFloat(document.getElementById('ch2').value)||40);
   if(!_d.h){
     b.x=Math.max(img.x,Math.min(img.x+img.w-b.w,_d.b.x+dx));
     b.y=Math.max(img.y,Math.min(img.y+img.h-b.h,_d.b.y+dy));
-  }else{
+  } else {
     var h=_d.h,ob=_d.b;
     if(h==='br'){b.w=Math.max(40,ob.w+dx);b.h=b.w/car;}
     else if(h==='bl'){b.w=Math.max(40,ob.w-dx);b.h=b.w/car;b.x=ob.x+ob.w-b.w;}
     else if(h==='tr'){b.w=Math.max(40,ob.w+dx);b.h=b.w/car;b.y=ob.y+ob.h-b.h;}
     else if(h==='tl'){b.w=Math.max(40,ob.w-dx);b.h=b.w/car;b.x=ob.x+ob.w-b.w;b.y=ob.y+ob.h-b.h;}
-    b.x=Math.max(img.x,b.x);b.y=Math.max(img.y,b.y);
-    if(b.x+b.w>img.x+img.w)b.w=img.x+img.w-b.x;
-    if(b.y+b.h>img.y+img.h)b.h=img.y+img.h-b.y;
+    b.x=Math.max(img.x,b.x); b.y=Math.max(img.y,b.y);
+    if(b.x+b.w>img.x+img.w) b.w=img.x+img.w-b.x;
+    if(b.y+b.h>img.y+img.h) b.h=img.y+img.h-b.y;
   }
-  V.cropBox=b;syncBox();
+  V.cropBox=b; syncBox();
 });
-document.addEventListener('pointerup',function(){_d=null;});
+document.addEventListener('pointerup',    function(){_d=null;});
 document.addEventListener('pointercancel',function(){_d=null;});
 
 function applyCrop(){
-  if(!cImg.naturalWidth)return;
-  var img=V.imgDisp,b=V.cropBox;
+  if(!cImg.naturalWidth) return;
+  var img=V.imgDisp, b=V.cropBox;
   var sx=Math.round((b.x-img.x)*(cImg.naturalWidth/img.w));
   var sy=Math.round((b.y-img.y)*(cImg.naturalHeight/img.h));
   var sw=Math.round(b.w*(cImg.naturalWidth/img.w));
   var sh=Math.round(b.h*(cImg.naturalHeight/img.h));
-  var t=document.createElement('canvas');t.width=sw;t.height=sh;
+  var t=document.createElement('canvas'); t.width=sw; t.height=sh;
   t.getContext('2d').drawImage(cImg,sx,sy,sw,sh,0,0,sw,sh);
   V.lastCrop=t.toDataURL('image/jpeg',0.92);
   var cropped=new Image();
@@ -517,34 +514,33 @@ function applyCrop(){
     buildOutline(cropped);
     document.getElementById('bApply').style.display='none';
     document.getElementById('cropBtns').style.display='flex';
-    document.getElementById('cropMsg').textContent='Done! Download or Save below, then tap AR tab to see outline.';
+    document.getElementById('cropMsg').textContent='Done. Download or Save, then go to AR tab to see outline.';
   };
   cropped.src=V.lastCrop;
 }
 
-
-
 function dlCrop(){
   if(!V.lastCrop){alert('Apply a crop first');return;}
-  dl(V.lastCrop,'paintguide-crop.jpg');
+  doDownload(V.lastCrop,'paintguide-crop.jpg');
 }
 
 function saveCrop(){
   if(!V.lastCrop){alert('Apply a crop first');return;}
   V.saves.push(V.lastCrop);
   renderThumbs();
-  document.getElementById('cropMsg').textContent='Saved! See the Saved tab.';
+  document.getElementById('cropMsg').textContent='Saved to Gallery tab!';
 }
 
-function dl(dataURL,name){
-  var a=document.createElement('a');a.href=dataURL;a.download=name;a.click();
+function doDownload(dataURL,name){
+  var a=document.createElement('a');
+  a.href=dataURL; a.download=name; a.click();
 }
 
-// ── SAVED ────────────────────────────────────
+// ── SAVED ────────────────────────────────────────────────────
 function renderThumbs(){
   var el=document.getElementById('thumbs');
+  if(!V.saves.length){el.innerHTML='<span style="font-size:0.7rem;color:#444">No saved crops yet</span>';return;}
   el.innerHTML='';
-  if(!V.saves.length){el.innerHTML='<span class="empty-note">No saved crops yet</span>';return;}
   for(var i=0;i<V.saves.length;i++){
     (function(idx){
       var img=document.createElement('img');
@@ -555,7 +551,7 @@ function renderThumbs(){
   }
 }
 
-function clearSaved(){V.saves=[];renderThumbs();}
+function clearSaved(){ V.saves=[]; renderThumbs(); }
 
 function openViewer(src){
   document.getElementById('vImg').src=src;
@@ -567,75 +563,98 @@ function closeViewer(){
 }
 function dlViewed(){
   var src=document.getElementById('vImg').src;
-  if(src) dl(src,'paintguide-crop.jpg');
+  if(src) doDownload(src,'paintguide-crop.jpg');
 }
 
-// ── PIN ──────────────────────────────────────
+// ── PIN ──────────────────────────────────────────────────────
+// Uses a dedicated invisible overlay div to catch taps reliably on mobile.
+// The canvas itself cannot reliably receive touch events on all Android browsers.
+
 function togglePin(){
   V.pinMode=!V.pinMode;
-  var b=document.getElementById('bPin');
-  if(V.pinMode){b.classList.add('on');hint.style.display='block';hint.textContent='Tap corner '+(V.pins.length+1)+' of 4';}
-  else{b.classList.remove('on');hint.style.display='none';}
-  cvs.style.cursor=V.pinMode?'crosshair':'default';
+  var btn=document.getElementById('bPin');
+  if(V.pinMode){
+    btn.classList.add('on');
+    pinOvl.style.display='block';
+    hint.style.display='block';
+    updatePinHint();
+  } else {
+    btn.classList.remove('on');
+    pinOvl.style.display='none';
+    hint.style.display='none';
+  }
 }
 
-cvs.addEventListener('click',function(e){
-  if(!V.pinMode)return;
-  var r=cvs.getBoundingClientRect();
-  var x=(e.clientX-r.left)*(cvs.width/r.width);
-  var y=(e.clientY-r.top)*(cvs.height/r.height);
+function updatePinHint(){
   if(V.pins.length<4){
-    V.pins.push({x:x,y:y});
+    hint.textContent='Tap corner '+(V.pins.length+1)+' of 4';
+  }
+}
+
+// Tap handler on the invisible overlay
+pinOvl.addEventListener('pointerdown',function(e){
+  e.preventDefault();
+  if(!V.pinMode) return;
+  var r=pinOvl.getBoundingClientRect();
+  // Map to canvas pixel coords
+  var px=(e.clientX-r.left)*(cvs.width/r.width);
+  var py=(e.clientY-r.top)*(cvs.height/r.height);
+  if(V.pins.length<4){
+    V.pins.push({x:px,y:py});
     if(V.pins.length===4){
       V.pinMode=false;
       document.getElementById('bPin').classList.remove('on');
-      cvs.style.cursor='default';hint.style.display='none';
-      document.getElementById('pinStatus').textContent='4 corners set - outline locked to canvas';
-    }else{
-      hint.textContent='Tap corner '+(V.pins.length+1)+' of 4';
-      document.getElementById('pinStatus').textContent=V.pins.length+' of 4 corners set';
+      pinOvl.style.display='none';
+      hint.style.display='none';
+      document.getElementById('pinSt').textContent='4 corners locked - outline warped to canvas';
+    } else {
+      updatePinHint();
+      document.getElementById('pinSt').textContent=V.pins.length+' of 4 corners set';
     }
     draw();
   }
 });
 
 function clearPins(){
-  V.pins=[];V.pinMode=false;
+  V.pins=[];
+  V.pinMode=false;
   document.getElementById('bPin').classList.remove('on');
-  cvs.style.cursor='default';hint.style.display='none';
-  document.getElementById('pinStatus').textContent='No corners set';
+  pinOvl.style.display='none';
+  hint.style.display='none';
+  document.getElementById('pinSt').textContent='No corners set';
   draw();
 }
 
-// ── GRID ─────────────────────────────────────
+// ── GRID ─────────────────────────────────────────────────────
 function gStyle(el){
-  var g=el.dataset.g,was=el.classList.contains('on');
+  var g=el.dataset.g, was=el.classList.contains('on');
   document.querySelectorAll('[data-g]').forEach(function(e){e.classList.remove('on');});
   if(!was){el.classList.add('on');V.gStyle=g;}else V.gStyle=null;
   document.getElementById('gCustom').style.display=(V.gStyle==='custom')?'flex':'none';
   draw();
 }
 
-function vToggle(el){
+function vTog(el){
   el.classList.toggle('on');
   V.showOl=document.querySelector('[data-v="ol"]').classList.contains('on');
   V.showGr=document.querySelector('[data-v="gr"]').classList.contains('on');
   draw();
 }
 
-// ── RESET ────────────────────────────────────
+// ── RESET ────────────────────────────────────────────────────
 function resetAll(){
-  V.img=null;V.outC=null;V.pins=[];V.pinMode=false;V.lastCrop=null;
-  V.gStyle=null;V.op=0.65;V.sc=1.0;V.gop=0.4;
+  V.img=null; V.outC=null; V.pins=[]; V.pinMode=false;
+  V.lastCrop=null; V.gStyle=null;
+  V.op=0.65; V.sc=1.0; V.gop=0.4;
   cancelAnimationFrame(V.raf);
   ctx.clearRect(0,0,cvs.width,cvs.height);
-  cLayer.style.display='none';cImg.src='';
-  hint.style.display='none';cvs.style.cursor='default';
+  cLayer.style.display='none'; cImg.src='';
+  pinOvl.style.display='none'; hint.style.display='none';
   document.getElementById('bPin').classList.remove('on');
-  document.getElementById('pinStatus').textContent='No corners set';
+  document.getElementById('pinSt').textContent='No corners set';
   document.getElementById('bApply').style.display='none';
   document.getElementById('cropBtns').style.display='none';
-  document.getElementById('cropMsg').textContent='Load an image then drag the box to select your crop area';
+  document.getElementById('cropMsg').textContent='Load an image, drag the box, then tap Apply Crop';
   document.querySelectorAll('[data-g]').forEach(function(e){e.classList.remove('on');});
   document.getElementById('gCustom').style.display='none';
   if(!V.camOn) ph.style.display='flex';
@@ -645,7 +664,7 @@ function resetAll(){
 
 window.addEventListener('resize',function(){draw();});
 if(location.protocol==='file:'){
-  alert('Camera requires HTTPS. Open via GitHub Pages, not local file.');
+  alert('Camera needs HTTPS. Please use your GitHub Pages link, not local file.');
 }
 </script>
 </body>
