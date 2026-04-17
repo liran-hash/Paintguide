@@ -26,6 +26,8 @@ button.p{background:#e8420a;color:#fff;border:none;border-radius:8px;padding:12p
 button.s{background:#252525;color:#f0ebe0;border:1px solid #3a3a3a;border-radius:8px;padding:12px 14px;font-size:0.8rem;cursor:pointer;flex:1;font-family:sans-serif;}
 button.s.on{background:#2a1208;border-color:#e8420a;color:#e8420a;}
 button.warn{background:#1e0e06;color:#e8420a;border:1px solid #e8420a55;border-radius:8px;padding:12px 14px;font-size:0.8rem;cursor:pointer;flex:1;font-family:sans-serif;}
+button.g{background:#0a2010;color:#4caf50;border:1px solid #4caf5055;border-radius:8px;padding:12px 14px;font-size:0.8rem;cursor:pointer;flex:1;font-family:sans-serif;}
+button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
 
 .sl{display:flex;align-items:center;gap:8px;}
 .sl span{font-size:0.68rem;color:#666;width:52px;flex-shrink:0;}
@@ -53,21 +55,16 @@ button.warn{background:#1e0e06;color:#e8420a;border:1px solid #e8420a55;border-r
 .ch.bl{bottom:-2px;left:-2px;border-right:none;border-top:none;}
 .ch.br{bottom:-2px;right:-2px;border-left:none;border-top:none;}
 
-/* PIN HINT - sits over viewport */
 #hint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.88);border:1px solid #e8420a;border-radius:8px;padding:8px 18px;font-size:0.78rem;color:#f0ebe0;z-index:20;pointer-events:none;white-space:nowrap;display:none;}
-
-/* PIN TAP OVERLAY - invisible layer to catch taps when in pin mode */
 #pinOverlay{position:absolute;inset:0;z-index:15;display:none;cursor:crosshair;}
 
 #ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
 #ph p{color:#444;font-size:0.85rem;text-align:center;line-height:2;}
 #ph b{color:#666;}
 
-/* SAVED THUMBS */
 #thumbs{display:flex;gap:8px;overflow-x:auto;min-height:58px;align-items:center;}
 #thumbs img{width:56px;height:56px;object-fit:cover;border-radius:6px;border:2px solid #333;cursor:pointer;flex-shrink:0;}
 
-/* FULL VIEWER */
 #viewer{display:none;position:fixed;inset:0;z-index:99;background:#000;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;}
 #viewer img{max-width:100%;max-height:72vh;object-fit:contain;border-radius:6px;}
 #viewer .row{width:100%;max-width:400px;}
@@ -88,10 +85,7 @@ button.warn{background:#1e0e06;color:#e8420a;border:1px solid #e8420a55;border-r
 <div id="viewport">
   <video id="vid" autoplay playsinline muted></video>
   <canvas id="cvs"></canvas>
-
-  <!-- invisible overlay that catches pin taps -->
   <div id="pinOverlay"></div>
-
   <div id="cropLayer">
     <img id="cimg" alt="">
     <div id="cropBox">
@@ -101,7 +95,6 @@ button.warn{background:#1e0e06;color:#e8420a;border:1px solid #e8420a55;border-r
       <div class="ch br" data-h="br"></div>
     </div>
   </div>
-
   <div id="hint"></div>
   <div id="ph"><p>Tap <b>Start Camera</b><br>then <b>Load Image</b></p></div>
 </div>
@@ -148,15 +141,17 @@ button.warn{background:#1e0e06;color:#e8420a;border:1px solid #e8420a55;border-r
 
   <div class="pane" id="pPin">
     <div class="row">
-      <button class="p" id="bPin" onclick="togglePin()">Tap 4 Corners</button>
-      <button class="s" onclick="clearPins()">Clear</button>
+      <button class="p" id="bDetect" onclick="detectCanvas()">Auto Detect</button>
+      <button class="s" id="bPin" onclick="togglePin()">Manual Corners</button>
     </div>
-    <div class="note">
-      1. Load image and start camera first.<br>
-      2. Tap <b>Tap 4 Corners</b> — button turns orange.<br>
-      3. Tap each corner of your canvas on screen:<br>
-      &nbsp;&nbsp; Top-left, Top-right, Bottom-left, Bottom-right.<br>
-      4. Outline warps to your canvas. Keep phone still.
+    <div class="row">
+      <button class="g" id="bTrack" onclick="toggleTracking()">Start Tracking</button>
+      <button class="warn" onclick="clearPins()">Clear</button>
+    </div>
+    <div class="note" id="pinNote">
+      <b>Auto Detect:</b> finds canvas automatically.<br>
+      <b>Manual Corners:</b> tap TL, TR, BL, BR yourself.<br>
+      <b>Start Tracking:</b> once corners set, keeps outline locked as you move phone slowly.
     </div>
     <div id="pinSt" class="note">No corners set</div>
   </div>
@@ -208,7 +203,15 @@ button.warn{background:#1e0e06;color:#e8420a;border:1px solid #e8420a55;border-r
 var V = {
   op:0.65, sc:1.0, gop:0.4,
   gStyle:null, showOl:true, showGr:true,
+  // pins: array of {x,y} in canvas coords
   pins:[], pinMode:false,
+  // tracking
+  tracking:false,
+  patches:[],        // corner patches sampled from video frame
+  patchSize:24,      // half-size of patch in pixels
+  searchR:40,        // search radius in pixels for tracking
+  trackC:document.createElement('canvas'), // offscreen for frame sampling
+  // crop/save
   lastCrop:null, saves:[],
   raf:null, stream:null, camOn:false,
   img:null, outC:null,
@@ -217,39 +220,38 @@ var V = {
 };
 
 // ── DOM ──────────────────────────────────────────────────────
-var vid      = document.getElementById('vid');
-var cvs      = document.getElementById('cvs');
-var ctx      = cvs.getContext('2d');
-var cLayer   = document.getElementById('cropLayer');
-var cImg     = document.getElementById('cimg');
-var cBox     = document.getElementById('cropBox');
-var ph       = document.getElementById('ph');
-var hint     = document.getElementById('hint');
-var bCam     = document.getElementById('bCam');
-var pinOvl   = document.getElementById('pinOverlay');
+var vid     = document.getElementById('vid');
+var cvs     = document.getElementById('cvs');
+var ctx     = cvs.getContext('2d');
+var cLayer  = document.getElementById('cropLayer');
+var cImg    = document.getElementById('cimg');
+var cBox    = document.getElementById('cropBox');
+var ph      = document.getElementById('ph');
+var hint    = document.getElementById('hint');
+var bCam    = document.getElementById('bCam');
+var pinOvl  = document.getElementById('pinOverlay');
 
 // ── HELPERS ──────────────────────────────────────────────────
 function lbl(id,v){ document.getElementById(id).textContent=v; }
 function st(msg){ document.getElementById('st').textContent=msg; }
+function pinSt(msg){ document.getElementById('pinSt').textContent=msg; }
 
 // ── TABS ─────────────────────────────────────────────────────
-var tabIds = ['ar','crop','pin','grid','saved'];
+var tabIds  = ['ar','crop','pin','grid','saved'];
 var paneIds = ['pAR','pCrop','pPin','pGrid','pSaved'];
 
 function tab(t) {
   var btns = document.querySelectorAll('#tabs button');
   for(var i=0;i<tabIds.length;i++){
-    var isActive = (tabIds[i]===t);
-    btns[i].classList.toggle('active', isActive);
-    document.getElementById(paneIds[i]).classList.toggle('on', isActive);
+    var on = (tabIds[i]===t);
+    btns[i].classList.toggle('active', on);
+    document.getElementById(paneIds[i]).classList.toggle('on', on);
   }
-  // show crop layer only on crop tab
   cLayer.style.display = (t==='crop') ? 'block' : 'none';
-  // if leaving pin tab while in pin mode, cancel it
   if(V.pinMode && t!=='pin'){
-    V.pinMode = false;
-    pinOvl.style.display = 'none';
-    hint.style.display = 'none';
+    V.pinMode=false;
+    pinOvl.style.display='none';
+    hint.style.display='none';
     document.getElementById('bPin').classList.remove('on');
   }
   draw();
@@ -262,29 +264,29 @@ function toggleCam(){
 
 function startCam(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    st('Camera not supported in this browser'); return;
+    st('Camera not supported'); return;
   }
   st('Requesting camera permission...');
   navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
   .then(function(s){
-    V.stream=s;
-    vid.srcObject=s;
+    V.stream=s; vid.srcObject=s;
     vid.play().catch(function(){});
     V.camOn=true;
     bCam.textContent='Stop Camera';
     bCam.classList.add('on');
     ph.style.display='none';
     if(V.img){ startLoop(); st('Camera on - outline active'); }
-    else { st('Camera on - load image'); }
+    else st('Camera on - load image');
   })
   .catch(function(e){
-    var m = e.name==='NotAllowedError' ? 'Permission denied - check browser settings' :
-            e.name==='NotFoundError'   ? 'No camera found' : (e.message||'Error');
+    var m=e.name==='NotAllowedError'?'Permission denied - check browser settings':
+          e.name==='NotFoundError'?'No camera found':(e.message||'Error');
     st('Camera error: '+m);
   });
 }
 
 function stopCam(){
+  stopTracking();
   cancelAnimationFrame(V.raf);
   if(V.stream) V.stream.getTracks().forEach(function(t){t.stop();});
   V.stream=null; vid.srcObject=null; V.camOn=false;
@@ -294,7 +296,7 @@ function stopCam(){
 }
 
 // ── FILE INPUTS ──────────────────────────────────────────────
-document.getElementById('fileAR').addEventListener('change', function(e){
+document.getElementById('fileAR').addEventListener('change',function(e){
   var f=e.target.files[0]; if(!f) return;
   var r=new FileReader();
   r.onload=function(ev){
@@ -311,7 +313,7 @@ document.getElementById('fileAR').addEventListener('change', function(e){
   e.target.value='';
 });
 
-document.getElementById('fileCrop').addEventListener('change', function(e){
+document.getElementById('fileCrop').addEventListener('change',function(e){
   var f=e.target.files[0]; if(!f) return;
   var r=new FileReader();
   r.onload=function(ev){
@@ -404,11 +406,13 @@ function tri(tc,img, sx1,sy1,sx2,sy2,sx3,sy3, dx1,dy1,dx2,dy2,dx3,dy3){
 }
 
 function drawDots(){
+  var colors=['#e8420a','#e8420a','#e8420a','#e8420a'];
+  if(V.tracking) colors=['#4caf50','#4caf50','#4caf50','#4caf50'];
   for(var i=0;i<V.pins.length;i++){
     var p=V.pins[i];
     ctx.beginPath();ctx.arc(p.x,p.y,12,0,Math.PI*2);
-    ctx.fillStyle='rgba(232,66,10,0.9)';ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='bold 12px sans-serif';
+    ctx.fillStyle=colors[i];ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(i+1,p.x,p.y);
   }
@@ -441,12 +445,307 @@ function drawGridP(p){
   ctx.restore();
 }
 
+// ── AUTO DETECT ──────────────────────────────────────────────
+// Grabs current video frame, runs edge detection, finds largest quad
+
+function detectCanvas(){
+  if(!V.camOn){ alert('Start camera first'); return; }
+  if(vid.readyState < 2){ alert('Camera not ready yet'); return; }
+
+  pinSt('Detecting canvas...');
+
+  // sample video frame
+  var W=vid.videoWidth||640, H=vid.videoHeight||480;
+  var fc=document.createElement('canvas'); fc.width=W; fc.height=H;
+  var fx=fc.getContext('2d');
+  fx.drawImage(vid,0,0,W,H);
+  var imgd=fx.getImageData(0,0,W,H);
+
+  // build grayscale + edge map
+  var gray=new Uint8Array(W*H);
+  var edge=new Uint8Array(W*H);
+  var d=imgd.data;
+  for(var i=0;i<W*H;i++) gray[i]=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];
+
+  // Sobel on grayscale
+  for(var y=1;y<H-1;y++) for(var x=1;x<W-1;x++){
+    var gx2 = -gray[(y-1)*W+(x-1)]-2*gray[y*W+(x-1)]-gray[(y+1)*W+(x-1)]
+              +gray[(y-1)*W+(x+1)]+2*gray[y*W+(x+1)]+gray[(y+1)*W+(x+1)];
+    var gy2 = -gray[(y-1)*W+(x-1)]-2*gray[(y-1)*W+x]-gray[(y-1)*W+(x+1)]
+              +gray[(y+1)*W+(x-1)]+2*gray[(y+1)*W+x]+gray[(y+1)*W+(x+1)];
+    edge[y*W+x] = Math.min(255,Math.sqrt(gx2*gx2+gy2*gy2)*1.2) > 40 ? 255 : 0;
+  }
+
+  // Find bounding box of strongest edge region
+  // Use a grid of candidate rectangles, score by edge density on perimeter
+  var bestScore=-1, bestRect=null;
+  var step=Math.round(Math.min(W,H)*0.05);
+  var margin=Math.round(Math.min(W,H)*0.08);
+
+  for(var ty=margin;ty<H*0.4;ty+=step){
+    for(var tx=margin;tx<W*0.4;tx+=step){
+      for(var bx2=tx+W*0.3;bx2<W-margin;bx2+=step){
+        for(var by2=ty+H*0.3;by2<H-margin;by2+=step){
+          var score=scoreRect(edge,W,tx,ty,Math.round(bx2),Math.round(by2));
+          if(score>bestScore){ bestScore=score; bestRect={x:tx,y:ty,x2:Math.round(bx2),y2:Math.round(by2)}; }
+        }
+      }
+    }
+  }
+
+  if(!bestRect || bestScore<5){
+    pinSt('Could not detect canvas. Try Manual Corners.');
+    return;
+  }
+
+  // Map from video coords to canvas display coords
+  var vw=cvs.offsetWidth, vh=cvs.offsetHeight;
+  // video is object-fit:cover so we need to account for cropping
+  var vidAR=W/H, viewAR=vw/vh;
+  var scaleX, scaleY, offX=0, offY=0;
+  if(vidAR>viewAR){
+    scaleY=vh/H; scaleX=scaleY;
+    offX=(vw-W*scaleX)/2;
+  } else {
+    scaleX=vw/W; scaleY=scaleX;
+    offY=(vh-H*scaleY)/2;
+  }
+
+  function vidToDisp(px,py){
+    return{x:px*scaleX+offX, y:py*scaleY+offY};
+  }
+
+  var tl=vidToDisp(bestRect.x,  bestRect.y);
+  var tr=vidToDisp(bestRect.x2, bestRect.y);
+  var bl=vidToDisp(bestRect.x,  bestRect.y2);
+  var br=vidToDisp(bestRect.x2, bestRect.y2);
+
+  V.pins=[tl,tr,bl,br];
+  pinSt('Canvas detected! Check the corners (green dots) and adjust if needed, then tap Start Tracking.');
+  hint.textContent='Detected! Adjust if needed.';
+  hint.style.display='block';
+  setTimeout(function(){hint.style.display='none';},3000);
+  draw();
+}
+
+function scoreRect(edge,W,x1,y1,x2,y2){
+  // count edge pixels along perimeter
+  var count=0, total=0;
+  var dx=1;
+  for(var x=x1;x<=x2;x+=dx){
+    if(edge[y1*W+x]) count++; total++;
+    if(edge[y2*W+x]) count++; total++;
+  }
+  for(var y=y1;y<=y2;y++){
+    if(edge[y*W+x1]) count++; total++;
+    if(edge[y*W+x2]) count++; total++;
+  }
+  return total>0 ? (count/total)*10 : 0;
+}
+
+// ── TRACKING ─────────────────────────────────────────────────
+// Samples a small patch of pixels around each corner from the live video.
+// Each frame it searches nearby to find where the patch moved.
+
+function samplePatches(){
+  if(!V.camOn||V.pins.length!==4||vid.readyState<2) return false;
+  var W=vid.videoWidth||640, H=vid.videoHeight||480;
+  var vw=cvs.offsetWidth, vh=cvs.offsetHeight;
+  var vidAR=W/H, viewAR=vw/vh;
+  var scaleX,scaleY,offX=0,offY=0;
+  if(vidAR>viewAR){ scaleY=vh/H;scaleX=scaleY;offX=(vw-W*scaleX)/2; }
+  else { scaleX=vw/W;scaleY=scaleX;offY=(vh-H*scaleY)/2; }
+
+  V.trackC.width=W; V.trackC.height=H;
+  var tc=V.trackC.getContext('2d');
+  tc.drawImage(vid,0,0,W,H);
+  var imgd=tc.getImageData(0,0,W,H);
+
+  V.patches=[];
+  var ps=V.patchSize;
+
+  for(var i=0;i<4;i++){
+    var p=V.pins[i];
+    // convert display coords back to video coords
+    var vx=Math.round((p.x-offX)/scaleX);
+    var vy=Math.round((p.y-offY)/scaleY);
+    vx=Math.max(ps,Math.min(W-ps-1,vx));
+    vy=Math.max(ps,Math.min(H-ps-1,vy));
+
+    // sample patch pixels
+    var patch=[];
+    for(var dy=-ps;dy<=ps;dy+=2) for(var dx=-ps;dx<=ps;dx+=2){
+      var idx=((vy+dy)*W+(vx+dx))*4;
+      patch.push(imgd.data[idx],imgd.data[idx+1],imgd.data[idx+2]);
+    }
+    V.patches.push({vx:vx,vy:vy,patch:patch});
+  }
+  return true;
+}
+
+function patchDistance(imgd,W,vx,vy,patch,ps){
+  var sum=0, n=0, idx=0;
+  for(var dy=-ps;dy<=ps;dy+=2) for(var dx=-ps;dx<=ps;dx+=2){
+    var px=vx+dx, py=vy+dy;
+    if(px<0||px>=W||py<0||py>=imgd.height) {idx+=3;continue;}
+    var i2=(py*W+px)*4;
+    var dr=imgd.data[i2]-patch[idx], dg=imgd.data[i2+1]-patch[idx+1], db=imgd.data[i2+2]-patch[idx+2];
+    sum+=dr*dr+dg*dg+db*db;
+    n++; idx+=3;
+  }
+  return n>0?sum/n:999999;
+}
+
+function trackStep(){
+  if(!V.tracking||V.pins.length!==4||vid.readyState<2||V.patches.length!==4) return;
+  var W=vid.videoWidth||640, H=vid.videoHeight||480;
+  var vw=cvs.offsetWidth, vh=cvs.offsetHeight;
+  var vidAR=W/H, viewAR=vw/vh;
+  var scaleX,scaleY,offX=0,offY=0;
+  if(vidAR>viewAR){ scaleY=vh/H;scaleX=scaleY;offX=(vw-W*scaleX)/2; }
+  else { scaleX=vw/W;scaleY=scaleX;offY=(vh-H*scaleY)/2; }
+
+  V.trackC.width=W; V.trackC.height=H;
+  var tc=V.trackC.getContext('2d');
+  tc.drawImage(vid,0,0,W,H);
+  var imgd=tc.getImageData(0,0,W,H);
+
+  var ps=V.patchSize, sr=V.searchR;
+  var moved=false;
+
+  for(var i=0;i<4;i++){
+    var ref=V.patches[i];
+    var bestDist=patchDistance(imgd,W,ref.vx,ref.vy,ref.patch,ps);
+    var bestX=ref.vx, bestY=ref.vy;
+
+    // search in grid around last known position
+    for(var dy=-sr;dy<=sr;dy+=4) for(var dx=-sr;dx<=sr;dx+=4){
+      var nx=ref.vx+dx, ny=ref.vy+dy;
+      if(nx<ps||nx>=W-ps||ny<ps||ny>=H-ps) continue;
+      var dist=patchDistance(imgd,W,nx,ny,ref.patch,ps);
+      if(dist<bestDist){ bestDist=dist; bestX=nx; bestY=ny; }
+    }
+
+    // only update if moved meaningfully and confidence is ok
+    if(bestDist<8000 && (bestX!==ref.vx||bestY!==ref.vy)){
+      ref.vx=bestX; ref.vy=bestY;
+      V.pins[i]={x:bestX*scaleX+offX, y:bestY*scaleY+offY};
+      moved=true;
+    }
+  }
+}
+
+function toggleTracking(){
+  if(!V.pins.length===4&&V.pins.length!==4){
+    alert('Set 4 corners first using Auto Detect or Manual Corners');
+    return;
+  }
+  if(V.pins.length!==4){
+    alert('Need all 4 corners set first');
+    return;
+  }
+  if(V.tracking){ stopTracking(); }
+  else { startTracking(); }
+}
+
+function startTracking(){
+  if(!V.camOn){ alert('Start camera first'); return; }
+  if(V.pins.length!==4){ alert('Set all 4 corners first'); return; }
+  if(!samplePatches()){ alert('Camera not ready'); return; }
+  V.tracking=true;
+  document.getElementById('bTrack').textContent='Stop Tracking';
+  document.getElementById('bTrack').classList.add('on');
+  pinSt('Tracking active - move phone slowly');
+  startTrackLoop();
+}
+
+function stopTracking(){
+  V.tracking=false;
+  cancelAnimationFrame(V.trackRaf);
+  document.getElementById('bTrack').textContent='Start Tracking';
+  document.getElementById('bTrack').classList.remove('on');
+  if(V.pins.length===4) pinSt('Tracking stopped - corners still locked');
+}
+
+var V_trackRaf=null;
+function startTrackLoop(){
+  var frameCount=0;
+  function loop(){
+    frameCount++;
+    // run tracking every 3 frames for performance
+    if(frameCount%3===0) trackStep();
+    draw();
+    V_trackRaf=requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+// Override stopTracking to cancel correctly
+var _origStopTracking=stopTracking;
+stopTracking=function(){
+  V.tracking=false;
+  cancelAnimationFrame(V_trackRaf);
+  document.getElementById('bTrack').textContent='Start Tracking';
+  document.getElementById('bTrack').classList.remove('on');
+  if(V.pins.length===4) pinSt('Tracking stopped - corners still locked');
+};
+
+// ── PIN (MANUAL) ─────────────────────────────────────────────
+function togglePin(){
+  V.pinMode=!V.pinMode;
+  var btn=document.getElementById('bPin');
+  if(V.pinMode){
+    btn.classList.add('on');
+    pinOvl.style.display='block';
+    hint.style.display='block';
+    hint.textContent='Tap corner '+(V.pins.length+1)+' of 4 (TL, TR, BL, BR)';
+  } else {
+    btn.classList.remove('on');
+    pinOvl.style.display='none';
+    hint.style.display='none';
+  }
+}
+
+pinOvl.addEventListener('pointerdown',function(e){
+  e.preventDefault();
+  if(!V.pinMode) return;
+  var r=pinOvl.getBoundingClientRect();
+  var px=(e.clientX-r.left)*(cvs.width/r.width);
+  var py=(e.clientY-r.top)*(cvs.height/r.height);
+  if(V.pins.length<4){
+    V.pins.push({x:px,y:py});
+    if(V.pins.length===4){
+      V.pinMode=false;
+      document.getElementById('bPin').classList.remove('on');
+      pinOvl.style.display='none';
+      hint.style.display='none';
+      pinSt('4 corners set. Tap Start Tracking to lock outline as you move.');
+    } else {
+      hint.textContent='Tap corner '+(V.pins.length+1)+' of 4';
+      pinSt(V.pins.length+' of 4 corners set');
+    }
+    draw();
+  }
+});
+
+function clearPins(){
+  stopTracking();
+  V.pins=[]; V.patches=[];
+  V.pinMode=false;
+  document.getElementById('bPin').classList.remove('on');
+  pinOvl.style.display='none';
+  hint.style.display='none';
+  pinSt('No corners set');
+  draw();
+}
+
 // ── CROP ─────────────────────────────────────────────────────
 function initBox(){
   if(!cImg.naturalWidth) return;
   var vw=cLayer.offsetWidth, vh=cLayer.offsetHeight;
   var iw=cImg.naturalWidth, ih=cImg.naturalHeight;
-  var car=(parseFloat(document.getElementById('cw').value)||30)/(parseFloat(document.getElementById('ch2').value)||40);
+  var car=(parseFloat(document.getElementById('cw').value)||30)/
+          (parseFloat(document.getElementById('ch2').value)||40);
   var dw,dh;
   if(iw/ih>vw/vh){dw=vw;dh=vw/(iw/ih);}else{dh=vh;dw=vh*(iw/ih);}
   var dx=(vw-dw)/2, dy=(vh-dh)/2;
@@ -479,7 +778,8 @@ document.addEventListener('pointermove',function(e){
   if(!_d) return;
   var p=xy(e),dx=p.x-_d.x,dy=p.y-_d.y;
   var b=Object.assign({},_d.b), img=V.imgDisp;
-  var car=(parseFloat(document.getElementById('cw').value)||30)/(parseFloat(document.getElementById('ch2').value)||40);
+  var car=(parseFloat(document.getElementById('cw').value)||30)/
+          (parseFloat(document.getElementById('ch2').value)||40);
   if(!_d.h){
     b.x=Math.max(img.x,Math.min(img.x+img.w-b.w,_d.b.x+dx));
     b.y=Math.max(img.y,Math.min(img.y+img.h-b.h,_d.b.y+dy));
@@ -510,11 +810,10 @@ function applyCrop(){
   V.lastCrop=t.toDataURL('image/jpeg',0.92);
   var cropped=new Image();
   cropped.onload=function(){
-    V.img=cropped;
-    buildOutline(cropped);
+    V.img=cropped; buildOutline(cropped);
     document.getElementById('bApply').style.display='none';
     document.getElementById('cropBtns').style.display='flex';
-    document.getElementById('cropMsg').textContent='Done. Download or Save, then go to AR tab to see outline.';
+    document.getElementById('cropMsg').textContent='Done. Download or Save, then go to AR tab.';
   };
   cropped.src=V.lastCrop;
 }
@@ -566,65 +865,6 @@ function dlViewed(){
   if(src) doDownload(src,'paintguide-crop.jpg');
 }
 
-// ── PIN ──────────────────────────────────────────────────────
-// Uses a dedicated invisible overlay div to catch taps reliably on mobile.
-// The canvas itself cannot reliably receive touch events on all Android browsers.
-
-function togglePin(){
-  V.pinMode=!V.pinMode;
-  var btn=document.getElementById('bPin');
-  if(V.pinMode){
-    btn.classList.add('on');
-    pinOvl.style.display='block';
-    hint.style.display='block';
-    updatePinHint();
-  } else {
-    btn.classList.remove('on');
-    pinOvl.style.display='none';
-    hint.style.display='none';
-  }
-}
-
-function updatePinHint(){
-  if(V.pins.length<4){
-    hint.textContent='Tap corner '+(V.pins.length+1)+' of 4';
-  }
-}
-
-// Tap handler on the invisible overlay
-pinOvl.addEventListener('pointerdown',function(e){
-  e.preventDefault();
-  if(!V.pinMode) return;
-  var r=pinOvl.getBoundingClientRect();
-  // Map to canvas pixel coords
-  var px=(e.clientX-r.left)*(cvs.width/r.width);
-  var py=(e.clientY-r.top)*(cvs.height/r.height);
-  if(V.pins.length<4){
-    V.pins.push({x:px,y:py});
-    if(V.pins.length===4){
-      V.pinMode=false;
-      document.getElementById('bPin').classList.remove('on');
-      pinOvl.style.display='none';
-      hint.style.display='none';
-      document.getElementById('pinSt').textContent='4 corners locked - outline warped to canvas';
-    } else {
-      updatePinHint();
-      document.getElementById('pinSt').textContent=V.pins.length+' of 4 corners set';
-    }
-    draw();
-  }
-});
-
-function clearPins(){
-  V.pins=[];
-  V.pinMode=false;
-  document.getElementById('bPin').classList.remove('on');
-  pinOvl.style.display='none';
-  hint.style.display='none';
-  document.getElementById('pinSt').textContent='No corners set';
-  draw();
-}
-
 // ── GRID ─────────────────────────────────────────────────────
 function gStyle(el){
   var g=el.dataset.g, was=el.classList.contains('on');
@@ -643,7 +883,8 @@ function vTog(el){
 
 // ── RESET ────────────────────────────────────────────────────
 function resetAll(){
-  V.img=null; V.outC=null; V.pins=[]; V.pinMode=false;
+  stopTracking();
+  V.img=null; V.outC=null; V.pins=[]; V.patches=[]; V.pinMode=false;
   V.lastCrop=null; V.gStyle=null;
   V.op=0.65; V.sc=1.0; V.gop=0.4;
   cancelAnimationFrame(V.raf);
@@ -664,7 +905,7 @@ function resetAll(){
 
 window.addEventListener('resize',function(){draw();});
 if(location.protocol==='file:'){
-  alert('Camera needs HTTPS. Please use your GitHub Pages link, not local file.');
+  alert('Camera needs HTTPS. Use your GitHub Pages link, not a local file.');
 }
 </script>
 </body>
