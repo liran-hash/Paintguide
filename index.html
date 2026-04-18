@@ -112,10 +112,10 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
       <button class="warn" onclick="clearPins()">Clear</button>
     </div>
     <div class="note">
-      <b>Sequence:</b> Start Camera → Load Image → Pin tab.<br>
-      <b>Auto Detect:</b> finds canvas rectangle automatically.<br>
-      <b>Manual Corners:</b> tap TL, TR, BL, BR on screen.<br>
-      <b>Start Tracking:</b> outline stays locked as you move.
+      <b>Sequence:</b> Start Camera + Load Image first.<br>
+      <b>Auto Detect:</b> finds canvas rectangle.<br>
+      <b>Manual:</b> tap TL, TR, BL, BR on screen.<br>
+      <b>Tracking:</b> outline stays locked as you move.
     </div>
     <div id="pinSt" class="note">No corners set</div>
   </div>
@@ -180,9 +180,6 @@ function st(msg){document.getElementById('st').textContent=msg;}
 function pinSt(msg){document.getElementById('pinSt').textContent=msg;}
 
 // ── VIDEO/DISPLAY COORD MAPPING ──────────────────────────────
-// object-fit:cover: video fills display, excess clipped.
-// Wide video: fit height, clip sides (offX negative).
-// Tall video: fit width, clip top/bottom (offY negative).
 function getVidMap(){
   var W=vid.videoWidth||640,H=vid.videoHeight||480;
   var vw=cvs.offsetWidth,vh=cvs.offsetHeight;
@@ -214,7 +211,6 @@ function tab(t){
 
 // ── CAMERA ───────────────────────────────────────────────────
 function toggleCam(){if(V.camOn)stopCam();else startCam();}
-
 function startCam(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){st('Camera not supported');return;}
   st('Requesting camera permission...');
@@ -224,22 +220,19 @@ function startCam(){
     V.camOn=true;
     bCam.textContent='Stop Camera';bCam.classList.add('on');
     ph.style.display='none';
-    startLoop(); // always start loop immediately when camera on
+    startLoop();
     st(V.img?'Camera on - outline active':'Camera on - load image');
   })
   .catch(function(e){
     st('Camera error: '+(e.name==='NotAllowedError'?'Permission denied':e.message||'Error'));
   });
 }
-
 function stopCam(){
-  stopTracking();
-  cancelAnimationFrame(V.raf);V.raf=null;
+  stopTracking();cancelAnimationFrame(V.raf);V.raf=null;
   if(V.stream)V.stream.getTracks().forEach(function(t){t.stop();});
   V.stream=null;vid.srcObject=null;V.camOn=false;
   bCam.textContent='Start Camera';bCam.classList.remove('on');
-  ctx.clearRect(0,0,cvs.width,cvs.height);
-  st('Camera stopped');
+  ctx.clearRect(0,0,cvs.width,cvs.height);st('Camera stopped');
 }
 
 // ── FILE INPUTS ──────────────────────────────────────────────
@@ -258,7 +251,6 @@ document.getElementById('fileAR').addEventListener('change',function(e){
   };
   r.readAsDataURL(f);e.target.value='';
 });
-
 document.getElementById('fileCrop').addEventListener('change',function(e){
   var f=e.target.files[0];if(!f)return;
   var r=new FileReader();
@@ -293,7 +285,6 @@ function buildOutline(img){
 }
 
 // ── RENDER LOOP ───────────────────────────────────────────────
-// Single unified loop. Tracking updates V.pins inside here.
 function startLoop(){
   cancelAnimationFrame(V.raf);V.raf=null;
   var frame=0;
@@ -312,57 +303,61 @@ function draw(){
   ctx.clearRect(0,0,vw,vh);
   if(!V.img||!V.outC)return;
 
-  var iw=V.outC.width,ih=V.outC.height;
-  var ar=iw/ih,bw,bh;
-  if(ar>vw/vh){bw=vw*V.sc;bh=bw/ar;}else{bh=vh*V.sc;bw=bh*ar;}
-
   if(V.pins.length===4){
-    // Warp outline to fit the 4 pinned corners.
-    // Source coords are in FULL IMAGE PIXEL SPACE (0..iw, 0..ih).
-    // Destination coords are the pin positions on screen.
+    // Warp outline to fit the 4 pins
     var p=V.pins;
+    var iw=V.outC.width,ih=V.outC.height;
     var t=document.createElement('canvas');t.width=vw;t.height=vh;
     var tc=t.getContext('2d');
     if(V.showOl){
       tc.globalAlpha=V.op;
-      // map full image rect to pin quad via 2 triangles
+      // Triangle 1: image top-left triangle -> screen top-left triangle
+      // img pts: (0,0),(iw,0),(0,ih)  screen pts: p[0],p[1],p[2]
       warpTri(tc,V.outC,
-        0,0,  iw,0,  0,ih,
-        p[0].x,p[0].y,  p[1].x,p[1].y,  p[2].x,p[2].y);
+        0,0,   iw,0,  0,ih,
+        p[0].x,p[0].y, p[1].x,p[1].y, p[2].x,p[2].y);
+      // Triangle 2: image bottom-right triangle -> screen bottom-right triangle
+      // img pts: (iw,0),(0,ih),(iw,ih)  screen pts: p[1],p[2],p[3]
       warpTri(tc,V.outC,
         iw,0,  0,ih,  iw,ih,
-        p[1].x,p[1].y,  p[2].x,p[2].y,  p[3].x,p[3].y);
+        p[1].x,p[1].y, p[2].x,p[2].y, p[3].x,p[3].y);
       tc.globalAlpha=1;
     }
     ctx.drawImage(t,0,0);
     if(V.gStyle&&V.showGr)drawGridP(p);
-    drawDots();
   } else {
-    // No pins: draw centered/scaled outline
+    var ar=V.outC.width/V.outC.height,bw,bh;
+    if(ar>vw/vh){bw=vw*V.sc;bh=bw/ar;}else{bh=vh*V.sc;bw=bh*ar;}
     var bx=(vw-bw)/2,by=(vh-bh)/2;
     if(V.showOl){ctx.globalAlpha=V.op;ctx.drawImage(V.outC,bx,by,bw,bh);ctx.globalAlpha=1;}
     if(V.gStyle&&V.showGr)drawGrid(bx,by,bw,bh);
-    drawDots();
   }
+  drawDots();
 }
 
-// Affine warp: maps source triangle (sx1,sy1)..(sx3,sy3) to dest triangle (dx1,dy1)..(dx3,dy3)
-// Source coords are in IMAGE pixel space. warpTri divides by img.width/height internally.
-function warpTri(tc,img,sx1,sy1,sx2,sy2,sx3,sy3,dx1,dy1,dx2,dy2,dx3,dy3){
+// ── WARP TRIANGLE ─────────────────────────────────────────────
+// Maps image pixels at (ix1,iy1),(ix2,iy2),(ix3,iy3)
+// to screen positions (sx1,sy1),(sx2,sy2),(sx3,sy3)
+// Uses canvas transform(a,b,c,d,e,f) where:
+//   screen_x = a*img_x + c*img_y + e
+//   screen_y = b*img_x + d*img_y + f
+function warpTri(tc,img,ix1,iy1,ix2,iy2,ix3,iy3,sx1,sy1,sx2,sy2,sx3,sy3){
   tc.save();
-  tc.beginPath();tc.moveTo(dx1,dy1);tc.lineTo(dx2,dy2);tc.lineTo(dx3,dy3);tc.closePath();tc.clip();
-  // solve for affine transform mapping src -> dst
-  var dn=sy1*(sx3-sx2)+sy2*(sx1-sx3)+sy3*(sx2-sx1);
-  if(Math.abs(dn)<0.001){tc.restore();return;}
-  var a=((dy1-dy3)*(sx2-sx3)-(dy2-dy3)*(sx1-sx3))/dn;
-  var b=((dy1-dy3)*(sy2-sy3)-(dy2-dy3)*(sy1-sy3))/(-dn);
-  var c=dy1-a*sx1-b*sy1;
-  var d=((dx1-dx3)*(sx2-sx3)-(dx2-dx3)*(sx1-sx3))/dn;
-  var e=((dx1-dx3)*(sy2-sy3)-(dx2-dx3)*(sy1-sy3))/(-dn);
-  var f=dx1-d*sx1-e*sy1;
-  // canvas transform works in normalised image space [0..1]
-  // so divide by image dimensions
-  tc.transform(d/img.width,a/img.height,e/img.width,b/img.height,f,c);
+  // clip to destination triangle
+  tc.beginPath();tc.moveTo(sx1,sy1);tc.lineTo(sx2,sy2);tc.lineTo(sx3,sy3);tc.closePath();tc.clip();
+  // solve affine: find a,b,c,d,e,f such that image pts map to screen pts
+  var det=ix1*(iy2-iy3)-iy1*(ix2-ix3)+(ix2*iy3-ix3*iy2);
+  if(Math.abs(det)<0.001){tc.restore();return;}
+  var a=(sx1*(iy2-iy3)-iy1*(sx2-sx3)+(sx2*iy3-sx3*iy2))/det;
+  var c=(ix1*(sx2-sx3)-sx1*(ix2-ix3)+(ix2*sx3-ix3*sx2))/det;
+  var e=(ix1*(iy2*sx3-iy3*sx2)-iy1*(ix2*sx3-ix3*sx2)+sx1*(ix2*iy3-ix3*iy2))/det;
+  var b=(sy1*(iy2-iy3)-iy1*(sy2-sy3)+(sy2*iy3-sy3*iy2))/det;
+  var d=(ix1*(sy2-sy3)-sy1*(ix2-ix3)+(ix2*sy3-ix3*sy2))/det;
+  var f=(ix1*(iy2*sy3-iy3*sy2)-iy1*(ix2*sy3-ix3*sy2)+sy1*(ix2*iy3-ix3*iy2))/det;
+  // canvas transform maps drawing coords, not image pixels directly
+  // we drawImage(img,0,0) so img pixel (px,py) = drawing coord (px,py)
+  // transform(a,b,c,d,e,f) maps (px,py) -> (a*px+c*py+e, b*px+d*py+f)
+  tc.transform(a,b,c,d,e,f);
   tc.drawImage(img,0,0);
   tc.restore();
 }
@@ -401,76 +396,52 @@ function drawGridP(p){
 }
 
 // ── AUTO DETECT ──────────────────────────────────────────────
-// Strategy: find the largest high-edge-density rectangle,
-// biased toward larger area and more central position.
 function detectCanvas(){
   if(!V.camOn){alert('Start camera first');return;}
   if(vid.readyState<2){alert('Camera not ready yet');return;}
   pinSt('Detecting...');
-
   var m=getVidMap(),W=m.W,H=m.H;
   var fc=document.createElement('canvas');fc.width=W;fc.height=H;
   fc.getContext('2d').drawImage(vid,0,0,W,H);
   var imgd=fc.getContext('2d').getImageData(0,0,W,H);
   var gray=new Uint8Array(W*H),edge=new Uint8Array(W*H),d=imgd.data;
-
-  for(var i=0;i<W*H;i++)
-    gray[i]=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];
-
+  for(var i=0;i<W*H;i++)gray[i]=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];
   for(var y=1;y<H-1;y++)for(var x=1;x<W-1;x++){
-    var gx2=-gray[(y-1)*W+(x-1)]-2*gray[y*W+(x-1)]-gray[(y+1)*W+(x-1)]
-            +gray[(y-1)*W+(x+1)]+2*gray[y*W+(x+1)]+gray[(y+1)*W+(x+1)];
-    var gy2=-gray[(y-1)*W+(x-1)]-2*gray[(y-1)*W+x]-gray[(y-1)*W+(x+1)]
-            +gray[(y+1)*W+(x-1)]+2*gray[(y+1)*W+x]+gray[(y+1)*W+(x+1)];
+    var gx2=-gray[(y-1)*W+(x-1)]-2*gray[y*W+(x-1)]-gray[(y+1)*W+(x-1)]+gray[(y-1)*W+(x+1)]+2*gray[y*W+(x+1)]+gray[(y+1)*W+(x+1)];
+    var gy2=-gray[(y-1)*W+(x-1)]-2*gray[(y-1)*W+x]-gray[(y-1)*W+(x+1)]+gray[(y+1)*W+(x-1)]+2*gray[(y+1)*W+x]+gray[(y+1)*W+(x+1)];
     edge[y*W+x]=Math.sqrt(gx2*gx2+gy2*gy2)>35?255:0;
   }
-
   var bestScore=-1,bestRect=null;
   var step=Math.round(Math.min(W,H)*0.05);
   var margin=Math.round(Math.min(W,H)*0.05);
-  var cx=W/2,cy=H/2; // center of frame
-
+  var cx=W/2,cy=H/2;
   for(var ty=margin;ty<H*0.5;ty+=step)
   for(var tx=margin;tx<W*0.5;tx+=step)
   for(var bx=tx+W*0.2;bx<W-margin;bx+=step)
   for(var by=ty+H*0.2;by<H-margin;by+=step){
     var edgeScore=scoreRect(edge,W,Math.round(tx),Math.round(ty),Math.round(bx),Math.round(by));
-    var area=(bx-tx)*(by-ty)/(W*H); // normalised area, 0..1
-    // penalise rects whose center is far from frame center
+    var area=(bx-tx)*(by-ty)/(W*H);
     var rcx=(tx+bx)/2,rcy=(ty+by)/2;
     var centerPenalty=Math.sqrt(Math.pow((rcx-cx)/W,2)+Math.pow((rcy-cy)/H,2));
-    var score=edgeScore*0.5 + area*6 - centerPenalty*2;
+    var score=edgeScore*0.5+area*6-centerPenalty*2;
     if(score>bestScore){bestScore=score;bestRect={x:Math.round(tx),y:Math.round(ty),x2:Math.round(bx),y2:Math.round(by)};}
   }
-
-  if(!bestRect||bestScore<0.5){
-    pinSt('Could not detect canvas. Try Manual Corners.');
-    return;
-  }
-
+  if(!bestRect||bestScore<0.5){pinSt('Could not detect canvas. Use Manual Corners.');return;}
   V.pins=[
-    v2d(bestRect.x,  bestRect.y,  m),
-    v2d(bestRect.x2, bestRect.y,  m),
-    v2d(bestRect.x,  bestRect.y2, m),
-    v2d(bestRect.x2, bestRect.y2, m)
+    v2d(bestRect.x, bestRect.y, m),
+    v2d(bestRect.x2,bestRect.y, m),
+    v2d(bestRect.x, bestRect.y2,m),
+    v2d(bestRect.x2,bestRect.y2,m)
   ];
   pinSt('Detected - check dots, adjust if needed, then Start Tracking');
-  hint.textContent='Canvas detected - check corners';
+  hint.textContent='Canvas detected';
   hint.style.display='block';
   setTimeout(function(){hint.style.display='none';},2500);
-  // loop is already running - draw() will pick up new pins automatically
 }
-
 function scoreRect(edge,W,x1,y1,x2,y2){
   var count=0,total=0;
-  for(var x=x1;x<=x2;x++){
-    if(edge[y1*W+x])count++;total++;
-    if(edge[y2*W+x])count++;total++;
-  }
-  for(var y=y1+1;y<y2;y++){
-    if(edge[y*W+x1])count++;total++;
-    if(edge[y*W+x2])count++;total++;
-  }
+  for(var x=x1;x<=x2;x++){if(edge[y1*W+x])count++;total++;if(edge[y2*W+x])count++;total++;}
+  for(var y=y1+1;y<y2;y++){if(edge[y*W+x1])count++;total++;if(edge[y*W+x2])count++;total++;}
   return total>0?(count/total)*10:0;
 }
 
@@ -495,7 +466,6 @@ function samplePatches(){
   }
   return true;
 }
-
 function patchDist(imgd,W,H,vx,vy,patch,ps){
   var sum=0,n=0,idx=0;
   for(var dy=-ps;dy<=ps;dy+=2)for(var dx=-ps;dx<=ps;dx+=2){
@@ -507,7 +477,6 @@ function patchDist(imgd,W,H,vx,vy,patch,ps){
   }
   return n>0?sum/n:999999;
 }
-
 function trackStep(){
   if(V.pins.length!==4||V.patches.length!==4||vid.readyState<2)return;
   var m=getVidMap(),W=m.W,H=m.H,ps=V.patchSize,sr=V.searchR;
@@ -524,13 +493,9 @@ function trackStep(){
       var dist=patchDist(imgd,W,H,nx,ny,ref.patch,ps);
       if(dist<bestDist){bestDist=dist;bestX=nx;bestY=ny;}
     }
-    if(bestDist<6000){
-      ref.vx=bestX;ref.vy=bestY;
-      V.pins[i]=v2d(bestX,bestY,m);
-    }
+    if(bestDist<6000){ref.vx=bestX;ref.vy=bestY;V.pins[i]=v2d(bestX,bestY,m);}
   }
 }
-
 function toggleTracking(){
   if(V.pins.length!==4){alert('Set all 4 corners first');return;}
   if(V.tracking)stopTracking();else startTracking();
@@ -542,8 +507,7 @@ function startTracking(){
   V.tracking=true;
   document.getElementById('bTrack').textContent='Stop Tracking';
   document.getElementById('bTrack').classList.add('on');
-  pinSt('Tracking - dots green - move phone slowly');
-  // main loop already running, no need to restart
+  pinSt('Tracking active - move phone slowly');
 }
 function stopTracking(){
   V.tracking=false;
@@ -564,7 +528,6 @@ function togglePin(){
     btn.classList.remove('on');pinOvl.style.display='none';hint.style.display='none';
   }
 }
-
 pinOvl.addEventListener('pointerdown',function(e){
   e.preventDefault();if(!V.pinMode)return;
   var r=pinOvl.getBoundingClientRect();
@@ -582,7 +545,6 @@ pinOvl.addEventListener('pointerdown',function(e){
     }
   }
 });
-
 function clearPins(){
   stopTracking();V.pins=[];V.patches=[];V.pinMode=false;
   document.getElementById('bPin').classList.remove('on');
@@ -609,10 +571,8 @@ function syncBox(){
   var b=V.cropBox;
   cBox.style.left=b.x+'px';cBox.style.top=b.y+'px';cBox.style.width=b.w+'px';cBox.style.height=b.h+'px';
 }
-
 var _d=null;
 function xy(e){var s=e.touches?e.touches[0]:e;return{x:s.clientX,y:s.clientY};}
-
 cBox.addEventListener('pointerdown',function(e){
   var h=e.target.dataset?e.target.dataset.h:null;
   var p=xy(e);
@@ -641,7 +601,6 @@ document.addEventListener('pointermove',function(e){
 });
 document.addEventListener('pointerup',function(){_d=null;});
 document.addEventListener('pointercancel',function(){_d=null;});
-
 function applyCrop(){
   if(!cImg.naturalWidth)return;
   var img=V.imgDisp,b=V.cropBox;
@@ -684,14 +643,12 @@ function gStyle(el){
   var g=el.dataset.g,was=el.classList.contains('on');
   document.querySelectorAll('[data-g]').forEach(function(e){e.classList.remove('on');});
   if(!was){el.classList.add('on');V.gStyle=g;}else V.gStyle=null;
-  document.getElementById('gCustom').style.display=V.gStyle==='custom'?'flex':'none';
-  draw();
+  document.getElementById('gCustom').style.display=V.gStyle==='custom'?'flex':'none';draw();
 }
 function vTog(el){
   el.classList.toggle('on');
   V.showOl=document.querySelector('[data-v="ol"]').classList.contains('on');
-  V.showGr=document.querySelector('[data-v="gr"]').classList.contains('on');
-  draw();
+  V.showGr=document.querySelector('[data-v="gr"]').classList.contains('on');draw();
 }
 
 // ── RESET ────────────────────────────────────────────────────
