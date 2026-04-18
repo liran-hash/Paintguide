@@ -15,8 +15,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;}
 #tabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#666;font-size:0.72rem;padding:10px 2px;cursor:pointer;font-family:sans-serif;text-transform:uppercase;}
 #tabs button.active{color:#e8420a;border-bottom-color:#e8420a;}
 #panel{background:#1a1a1a;padding:11px 13px 18px;flex-shrink:0;}
-.pane{display:none;flex-direction:column;gap:9px;}
-.pane.on{display:flex;}
+.pane{display:none;flex-direction:column;gap:9px;}.pane.on{display:flex;}
 .row{display:flex;gap:7px;}
 button.p{background:#e8420a;color:#fff;border:none;border-radius:8px;padding:12px 14px;font-size:0.8rem;cursor:pointer;flex:1;font-family:sans-serif;}
 button.s{background:#252525;color:#f0ebe0;border:1px solid #3a3a3a;border-radius:8px;padding:12px 14px;font-size:0.8rem;cursor:pointer;flex:1;font-family:sans-serif;}
@@ -34,8 +33,7 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
 .sz{display:flex;align-items:center;gap:6px;}
 .sz label{font-size:0.68rem;color:#666;}
 .sz input[type=number]{background:#252525;border:1px solid #3a3a3a;color:#f0ebe0;border-radius:6px;padding:5px 7px;width:52px;text-align:center;font-size:0.83rem;font-family:sans-serif;}
-.note{font-size:0.68rem;color:#666;line-height:1.65;}
-.note b{color:#f0ebe0;}
+.note{font-size:0.68rem;color:#666;line-height:1.65;}.note b{color:#f0ebe0;}
 #cropLayer{position:absolute;inset:0;z-index:5;display:none;}
 #cimg{position:absolute;pointer-events:none;user-select:none;}
 #cropBox{position:absolute;border:2px solid #e8420a;box-shadow:0 0 0 9999px rgba(0,0,0,0.55);touch-action:none;cursor:move;}
@@ -47,8 +45,7 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
 #hint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.88);border:1px solid #e8420a;border-radius:8px;padding:8px 18px;font-size:0.78rem;color:#f0ebe0;z-index:20;pointer-events:none;white-space:nowrap;display:none;}
 #pinOverlay{position:absolute;inset:0;z-index:15;display:none;cursor:crosshair;}
 #ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
-#ph p{color:#444;font-size:0.85rem;text-align:center;line-height:2;}
-#ph b{color:#666;}
+#ph p{color:#444;font-size:0.85rem;text-align:center;line-height:2;}#ph b{color:#666;}
 #thumbs{display:flex;gap:8px;overflow-x:auto;min-height:58px;align-items:center;}
 #thumbs img{width:56px;height:56px;object-fit:cover;border-radius:6px;border:2px solid #333;cursor:pointer;flex-shrink:0;}
 #viewer{display:none;position:fixed;inset:0;z-index:99;background:#000;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;}
@@ -58,7 +55,6 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
 </style>
 </head>
 <body>
-
 <div id="tabs">
   <button class="active" onclick="tab('ar')">AR</button>
   <button onclick="tab('crop')">Crop</button>
@@ -66,7 +62,6 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
   <button onclick="tab('grid')">Grid</button>
   <button onclick="tab('saved')">Saved</button>
 </div>
-
 <div id="viewport">
   <video id="vid" autoplay playsinline muted></video>
   <canvas id="cvs"></canvas>
@@ -74,44 +69,28 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
   <div id="cropLayer">
     <img id="cimg" alt="">
     <div id="cropBox">
-      <div class="ch tl" data-h="tl"></div>
-      <div class="ch tr" data-h="tr"></div>
-      <div class="ch bl" data-h="bl"></div>
-      <div class="ch br" data-h="br"></div>
+      <div class="ch tl" data-h="tl"></div><div class="ch tr" data-h="tr"></div>
+      <div class="ch bl" data-h="bl"></div><div class="ch br" data-h="br"></div>
     </div>
   </div>
   <div id="hint"></div>
   <div id="ph"><p>Tap <b>Start Camera</b><br>then <b>Load Image</b></p></div>
 </div>
-
 <div id="panel">
-
   <div class="pane on" id="pAR">
     <div class="row">
       <button class="p" id="bCam" onclick="toggleCam()">Start Camera</button>
       <button class="s" onclick="document.getElementById('fileAR').click()">Load Image</button>
       <button class="warn" onclick="resetAll()">Reset</button>
     </div>
-    <div class="sl">
-      <span>Opacity</span>
-      <input type="range" min="5" max="100" value="65" oninput="V.op=this.value/100;lbl('lOp',this.value+'%');draw()">
-      <b id="lOp">65%</b>
-    </div>
-    <div class="sl">
-      <span>Size</span>
-      <input type="range" min="20" max="150" value="100" oninput="V.sc=this.value/100;lbl('lSc',this.value+'%');draw()">
-      <b id="lSc">100%</b>
-    </div>
+    <div class="sl"><span>Opacity</span><input type="range" min="5" max="100" value="65" oninput="V.op=this.value/100;lbl('lOp',this.value+'%');draw()"><b id="lOp">65%</b></div>
+    <div class="sl"><span>Size</span><input type="range" min="20" max="150" value="100" oninput="V.sc=this.value/100;lbl('lSc',this.value+'%');draw()"><b id="lSc">100%</b></div>
     <div id="st" class="note">Start camera, then load image</div>
   </div>
-
   <div class="pane" id="pCrop">
     <div class="sz">
-      <label>Canvas</label>
-      <input type="number" id="cw" value="30" min="1" oninput="initBox()">
-      <label>x</label>
-      <input type="number" id="ch2" value="40" min="1" oninput="initBox()">
-      <label>cm</label>
+      <label>Canvas</label><input type="number" id="cw" value="30" min="1" oninput="initBox()">
+      <label>x</label><input type="number" id="ch2" value="40" min="1" oninput="initBox()"><label>cm</label>
     </div>
     <div class="row">
       <button class="p" onclick="document.getElementById('fileCrop').click()">Load Image</button>
@@ -123,7 +102,6 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
     </div>
     <div id="cropMsg" class="note">Load an image, drag the box, then tap Apply Crop</div>
   </div>
-
   <div class="pane" id="pPin">
     <div class="row">
       <button class="p" id="bDetect" onclick="detectCanvas()">Auto Detect</button>
@@ -133,45 +111,31 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
       <button class="g" id="bTrack" onclick="toggleTracking()">Start Tracking</button>
       <button class="warn" onclick="clearPins()">Clear</button>
     </div>
-    <div class="note">
-      <b>Auto Detect:</b> finds canvas edges automatically.<br>
-      <b>Manual Corners:</b> tap TL, TR, BL, BR yourself.<br>
-      <b>Start Tracking:</b> outline follows canvas as you move.
-    </div>
+    <div class="note"><b>Sequence:</b> Start Camera → Load Image → Auto Detect (or Manual) → Start Tracking.<br><b>Auto Detect:</b> finds canvas edges automatically.<br><b>Manual:</b> tap TL, TR, BL, BR.<br><b>Tracking:</b> outline follows as you move. Dots turn green.</div>
     <div id="pinSt" class="note">No corners set</div>
   </div>
-
   <div class="pane" id="pGrid">
     <div class="chips">
-      <span class="chip" data-g="equal"  onclick="gStyle(this)">Equal 4x4</span>
+      <span class="chip" data-g="equal" onclick="gStyle(this)">Equal 4x4</span>
       <span class="chip" data-g="thirds" onclick="gStyle(this)">Thirds 3x3</span>
       <span class="chip" data-g="custom" onclick="gStyle(this)">Custom</span>
     </div>
     <div class="sz" id="gCustom" style="display:none">
-      <label>Rows</label>
-      <input type="number" id="gRows" value="4" min="1" max="20" oninput="draw()">
-      <label>x Cols</label>
-      <input type="number" id="gCols" value="4" min="1" max="20" oninput="draw()">
+      <label>Rows</label><input type="number" id="gRows" value="4" min="1" max="20" oninput="draw()">
+      <label>x Cols</label><input type="number" id="gCols" value="4" min="1" max="20" oninput="draw()">
     </div>
     <div class="chips">
       <span class="chip on" data-v="ol" onclick="vTog(this)">Outline</span>
       <span class="chip on" data-v="gr" onclick="vTog(this)">Grid</span>
     </div>
-    <div class="sl">
-      <span>Grid opacity</span>
-      <input type="range" min="5" max="100" value="40" oninput="V.gop=this.value/100;lbl('lGop',this.value+'%');draw()">
-      <b id="lGop">40%</b>
-    </div>
+    <div class="sl"><span>Grid opacity</span><input type="range" min="5" max="100" value="40" oninput="V.gop=this.value/100;lbl('lGop',this.value+'%');draw()"><b id="lGop">40%</b></div>
   </div>
-
   <div class="pane" id="pSaved">
     <div class="note">Tap thumbnail to view full size or download</div>
     <div id="thumbs"><span style="font-size:0.7rem;color:#444">No saved crops yet</span></div>
     <div class="row"><button class="warn" onclick="clearSaved()">Clear All</button></div>
   </div>
-
 </div>
-
 <div id="viewer">
   <img id="vImg" src="" alt="">
   <div class="row">
@@ -179,106 +143,86 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
     <button class="s" onclick="closeViewer()">Close</button>
   </div>
 </div>
-
-<input type="file" id="fileAR"   accept="image/*">
+<input type="file" id="fileAR" accept="image/*">
 <input type="file" id="fileCrop" accept="image/*">
 
 <script>
-// ── STATE ────────────────────────────────────────────────────
-var V = {
-  op:0.65, sc:1.0, gop:0.4,
-  gStyle:null, showOl:true, showGr:true,
-  pins:[], pinMode:false,
-  tracking:false, patches:[], patchSize:20, searchR:36,
+var V={
+  op:0.65,sc:1.0,gop:0.4,
+  gStyle:null,showOl:true,showGr:true,
+  pins:[],pinMode:false,
+  tracking:false,patches:[],patchSize:20,searchR:36,
   trackC:document.createElement('canvas'),
-  lastCrop:null, saves:[],
-  raf:null, stream:null, camOn:false,
-  img:null, outC:null,
+  lastCrop:null,saves:[],
+  raf:null,stream:null,camOn:false,
+  img:null,outC:null,
   imgDisp:{x:0,y:0,w:0,h:0},
   cropBox:{x:0,y:0,w:0,h:0}
 };
 
-// ── DOM ──────────────────────────────────────────────────────
-var vid    = document.getElementById('vid');
-var cvs    = document.getElementById('cvs');
-var ctx    = cvs.getContext('2d');
-var cLayer = document.getElementById('cropLayer');
-var cImg   = document.getElementById('cimg');
-var cBox   = document.getElementById('cropBox');
-var ph     = document.getElementById('ph');
-var hint   = document.getElementById('hint');
-var bCam   = document.getElementById('bCam');
-var pinOvl = document.getElementById('pinOverlay');
+var vid=document.getElementById('vid');
+var cvs=document.getElementById('cvs');
+var ctx=cvs.getContext('2d');
+var cLayer=document.getElementById('cropLayer');
+var cImg=document.getElementById('cimg');
+var cBox=document.getElementById('cropBox');
+var ph=document.getElementById('ph');
+var hint=document.getElementById('hint');
+var bCam=document.getElementById('bCam');
+var pinOvl=document.getElementById('pinOverlay');
 
-function lbl(id,v){ document.getElementById(id).textContent=v; }
-function st(msg){ document.getElementById('st').textContent=msg; }
-function pinSt(msg){ document.getElementById('pinSt').textContent=msg; }
+function lbl(id,v){document.getElementById(id).textContent=v;}
+function st(msg){document.getElementById('st').textContent=msg;}
+function pinSt(msg){document.getElementById('pinSt').textContent=msg;}
 
-// ── VIDEO -> DISPLAY COORD MAPPING ───────────────────────────
-// object-fit:cover: the video is scaled so it fills the display,
-// and the excess is clipped symmetrically.
-// We need to know: for a pixel at (vx,vy) in the raw video frame,
-// where does it appear on screen?
+// ── VIDEO/DISPLAY COORD MAPPING ──────────────────────────────
+// object-fit:cover scales video to fill display, clipping the overflow.
+// When video is wider than display: fits to height, clips left/right -> offX is negative.
+// When video is taller than display: fits to width, clips top/bottom -> offY is negative.
 function getVidMap(){
-  var W=vid.videoWidth||640, H=vid.videoHeight||480;
-  var vw=cvs.offsetWidth, vh=cvs.offsetHeight;
-  var vidAR=W/H, viewAR=vw/vh;
-  var scale, offX=0, offY=0;
-  if(vidAR>viewAR){
-    // video wider than view: scale to fit height, clip sides
-    scale=vh/H;
-    offX=(vw-W*scale)/2;   // negative: video extends beyond screen on both sides
-  } else {
-    // video taller than view: scale to fit width, clip top/bottom
-    scale=vw/W;
-    offY=(vh-H*scale)/2;   // negative: video extends beyond screen on top/bottom
-  }
-  return{scale:scale, offX:offX, offY:offY, W:W, H:H, vw:vw, vh:vh};
+  var W=vid.videoWidth||640,H=vid.videoHeight||480;
+  var vw=cvs.offsetWidth,vh=cvs.offsetHeight;
+  var scale,offX=0,offY=0;
+  if(W/H>vw/vh){scale=vh/H;offX=(vw-W*scale)/2;}
+  else{scale=vw/W;offY=(vh-H*scale)/2;}
+  return{scale:scale,offX:offX,offY:offY,W:W,H:H};
 }
-
-function vidToDisp(vx,vy,m){
-  return{x:vx*m.scale+m.offX, y:vy*m.scale+m.offY};
-}
-
-function dispToVid(dx,dy,m){
-  return{
-    x:Math.round((dx-m.offX)/m.scale),
-    y:Math.round((dy-m.offY)/m.scale)
-  };
-}
+function v2d(vx,vy,m){return{x:vx*m.scale+m.offX,y:vy*m.scale+m.offY};}
+function d2v(dx,dy,m){return{x:Math.round((dx-m.offX)/m.scale),y:Math.round((dy-m.offY)/m.scale)};}
 
 // ── TABS ─────────────────────────────────────────────────────
-var tabIds  = ['ar','crop','pin','grid','saved'];
-var paneIds = ['pAR','pCrop','pPin','pGrid','pSaved'];
-
+var tabIds=['ar','crop','pin','grid','saved'];
+var paneIds=['pAR','pCrop','pPin','pGrid','pSaved'];
 function tab(t){
   var btns=document.querySelectorAll('#tabs button');
   for(var i=0;i<tabIds.length;i++){
-    var on=(tabIds[i]===t);
+    var on=tabIds[i]===t;
     btns[i].classList.toggle('active',on);
     document.getElementById(paneIds[i]).classList.toggle('on',on);
   }
-  cLayer.style.display=(t==='crop')?'block':'none';
+  cLayer.style.display=t==='crop'?'block':'none';
   if(V.pinMode&&t!=='pin'){
-    V.pinMode=false; pinOvl.style.display='none'; hint.style.display='none';
+    V.pinMode=false;pinOvl.style.display='none';hint.style.display='none';
     document.getElementById('bPin').classList.remove('on');
   }
   draw();
 }
 
 // ── CAMERA ───────────────────────────────────────────────────
-function toggleCam(){ if(V.camOn) stopCam(); else startCam(); }
+function toggleCam(){if(V.camOn)stopCam();else startCam();}
 
 function startCam(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){st('Camera not supported');return;}
   st('Requesting camera permission...');
   navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
   .then(function(s){
-    V.stream=s; vid.srcObject=s; vid.play().catch(function(){});
-    V.camOn=true; bCam.textContent='Stop Camera'; bCam.classList.add('on');
+    V.stream=s;vid.srcObject=s;vid.play().catch(function(){});
+    V.camOn=true;
+    bCam.textContent='Stop Camera';bCam.classList.add('on');
     ph.style.display='none';
-    if(V.img){ startLoop(); st('Camera on - outline active'); }
-    else st('Camera on - load image');
+    // ALWAYS start the render loop when camera is on
+    startLoop();
+    st(V.img?'Camera on - outline active':'Camera on - load image');
   })
   .catch(function(e){
     st('Camera error: '+(e.name==='NotAllowedError'?'Permission denied':e.message||'Error'));
@@ -287,32 +231,34 @@ function startCam(){
 
 function stopCam(){
   stopTracking();
-  cancelAnimationFrame(V.raf);
-  if(V.stream) V.stream.getTracks().forEach(function(t){t.stop();});
-  V.stream=null; vid.srcObject=null; V.camOn=false;
-  bCam.textContent='Start Camera'; bCam.classList.remove('on');
+  cancelAnimationFrame(V.raf);V.raf=null;
+  if(V.stream)V.stream.getTracks().forEach(function(t){t.stop();});
+  V.stream=null;vid.srcObject=null;V.camOn=false;
+  bCam.textContent='Start Camera';bCam.classList.remove('on');
   ctx.clearRect(0,0,cvs.width,cvs.height);
   st('Camera stopped');
 }
 
 // ── FILE INPUTS ──────────────────────────────────────────────
 document.getElementById('fileAR').addEventListener('change',function(e){
-  var f=e.target.files[0]; if(!f) return;
+  var f=e.target.files[0];if(!f)return;
   var r=new FileReader();
   r.onload=function(ev){
     var img=new Image();
     img.onload=function(){
-      V.img=img; buildOutline(img); ph.style.display='none';
-      if(V.camOn){ startLoop(); st('Image loaded - outline active'); }
-      else { draw(); st('Image loaded - start camera'); }
+      V.img=img;buildOutline(img);ph.style.display='none';
+      // ensure loop is running
+      if(V.camOn&&!V.raf)startLoop();
+      st(V.camOn?'Image loaded - outline active':'Image loaded - start camera');
+      draw();
     };
     img.src=ev.target.result;
   };
-  r.readAsDataURL(f); e.target.value='';
+  r.readAsDataURL(f);e.target.value='';
 });
 
 document.getElementById('fileCrop').addEventListener('change',function(e){
-  var f=e.target.files[0]; if(!f) return;
+  var f=e.target.files[0];if(!f)return;
   var r=new FileReader();
   r.onload=function(ev){
     cImg.onload=function(){
@@ -323,37 +269,36 @@ document.getElementById('fileCrop').addEventListener('change',function(e){
     };
     cImg.src=ev.target.result;
   };
-  r.readAsDataURL(f); e.target.value='';
+  r.readAsDataURL(f);e.target.value='';
 });
 
 // ── OUTLINE (Sobel) ──────────────────────────────────────────
 function buildOutline(img){
   var oc=document.createElement('canvas');
-  oc.width=img.width; oc.height=img.height;
-  var ox=oc.getContext('2d'); ox.drawImage(img,0,0);
+  oc.width=img.width;oc.height=img.height;
+  var ox=oc.getContext('2d');ox.drawImage(img,0,0);
   var s=ox.getImageData(0,0,oc.width,oc.height);
   var d=ox.createImageData(oc.width,oc.height);
   var W=oc.width,H=oc.height,sd=s.data,dd=d.data;
   function g(x,y){var i=(y*W+x)*4;return 0.299*sd[i]+0.587*sd[i+1]+0.114*sd[i+2];}
-  for(var y=1;y<H-1;y++) for(var x=1;x<W-1;x++){
+  for(var y=1;y<H-1;y++)for(var x=1;x<W-1;x++){
     var gx=-g(x-1,y-1)-2*g(x-1,y)-g(x-1,y+1)+g(x+1,y-1)+2*g(x+1,y)+g(x+1,y+1);
     var gy=-g(x-1,y-1)-2*g(x,y-1)-g(x+1,y-1)+g(x-1,y+1)+2*g(x,y+1)+g(x+1,y+1);
     var m=Math.min(255,Math.sqrt(gx*gx+gy*gy)*1.5);
-    var i=(y*W+x)*4;
-    dd[i]=dd[i+1]=dd[i+2]=255; dd[i+3]=m>22?Math.min(255,m*1.7):0;
+    var i=(y*W+x)*4;dd[i]=dd[i+1]=dd[i+2]=255;dd[i+3]=m>22?Math.min(255,m*1.7):0;
   }
-  ox.putImageData(d,0,0); V.outC=oc;
+  ox.putImageData(d,0,0);V.outC=oc;
 }
 
-// ── RENDER ───────────────────────────────────────────────────
-// ONE unified loop. Tracking just updates V.pins; draw() always runs here.
+// ── SINGLE UNIFIED RENDER LOOP ───────────────────────────────
+// This is the ONLY loop. Tracking updates V.pins here.
+// draw() then uses V.pins to warp the outline.
 function startLoop(){
-  cancelAnimationFrame(V.raf);
+  cancelAnimationFrame(V.raf);V.raf=null;
   var frame=0;
   function loop(){
     frame++;
-    // run tracking every 3 frames to save CPU
-    if(V.tracking && frame%3===0) trackStep();
+    if(V.tracking&&frame%3===0)trackStep();
     draw();
     V.raf=requestAnimationFrame(loop);
   }
@@ -361,39 +306,37 @@ function startLoop(){
 }
 
 function draw(){
-  var vw=cvs.offsetWidth, vh=cvs.offsetHeight;
-  cvs.width=vw; cvs.height=vh;
+  var vw=cvs.offsetWidth,vh=cvs.offsetHeight;
+  cvs.width=vw;cvs.height=vh;
   ctx.clearRect(0,0,vw,vh);
-  if(!V.img||!V.outC) return;
-  var ar=V.outC.width/V.outC.height, bw, bh;
+  if(!V.img||!V.outC)return;
+  var ar=V.outC.width/V.outC.height,bw,bh;
   if(ar>vw/vh){bw=vw*V.sc;bh=bw/ar;}else{bh=vh*V.sc;bw=bh*ar;}
-  if(V.pins.length===4) drawPinned(vw,vh,bw,bh);
+  if(V.pins.length===4)drawPinned(vw,vh,bw,bh);
   else drawRect((vw-bw)/2,(vh-bh)/2,bw,bh);
 }
 
 function drawRect(bx,by,bw,bh){
   if(V.showOl&&V.outC){ctx.globalAlpha=V.op;ctx.drawImage(V.outC,bx,by,bw,bh);ctx.globalAlpha=1;}
-  if(V.gStyle&&V.showGr) drawGrid(bx,by,bw,bh);
+  if(V.gStyle&&V.showGr)drawGrid(bx,by,bw,bh);
   drawDots();
 }
 
 function drawPinned(vw,vh,bw,bh){
-  // render outline warped to the 4 pin corners
-  var t=document.createElement('canvas'); t.width=vw; t.height=vh;
-  var tc=t.getContext('2d'), p=V.pins;
+  var t=document.createElement('canvas');t.width=vw;t.height=vh;
+  var tc=t.getContext('2d'),p=V.pins;
   if(V.showOl&&V.outC){
     tc.globalAlpha=V.op;
-    // two-triangle affine warp
-    tri(tc,V.outC, 0,0,bw,0,0,bh, p[0].x,p[0].y,p[1].x,p[1].y,p[2].x,p[2].y);
-    tri(tc,V.outC, bw,0,0,bh,bw,bh, p[1].x,p[1].y,p[2].x,p[2].y,p[3].x,p[3].y);
+    warpTri(tc,V.outC, 0,0,bw,0,0,bh, p[0].x,p[0].y,p[1].x,p[1].y,p[2].x,p[2].y);
+    warpTri(tc,V.outC, bw,0,0,bh,bw,bh, p[1].x,p[1].y,p[2].x,p[2].y,p[3].x,p[3].y);
     tc.globalAlpha=1;
   }
   ctx.drawImage(t,0,0);
-  if(V.gStyle&&V.showGr) drawGridP(p);
+  if(V.gStyle&&V.showGr)drawGridP(p);
   drawDots();
 }
 
-function tri(tc,img, sx1,sy1,sx2,sy2,sx3,sy3, dx1,dy1,dx2,dy2,dx3,dy3){
+function warpTri(tc,img,sx1,sy1,sx2,sy2,sx3,sy3,dx1,dy1,dx2,dy2,dx3,dy3){
   tc.save();
   tc.beginPath();tc.moveTo(dx1,dy1);tc.lineTo(dx2,dy2);tc.lineTo(dx3,dy3);tc.closePath();tc.clip();
   var dn=sy1*(sx3-sx2)+sy2*(sx1-sx3)+sy3*(sx2-sx1);
@@ -405,15 +348,15 @@ function tri(tc,img, sx1,sy1,sx2,sy2,sx3,sy3, dx1,dy1,dx2,dy2,dx3,dy3){
   var e=((dx1-dx3)*(sy2-sy3)-(dx2-dx3)*(sy1-sy3))/(-dn);
   var f=dx1-d*sx1-e*sy1;
   tc.transform(d/img.width,a/img.height,e/img.width,b/img.height,f,c);
-  tc.drawImage(img,0,0);
-  tc.restore();
+  tc.drawImage(img,0,0);tc.restore();
 }
 
 function drawDots(){
+  var col=V.tracking?'#4caf50':'#e8420a';
   for(var i=0;i<V.pins.length;i++){
     var p=V.pins[i];
     ctx.beginPath();ctx.arc(p.x,p.y,12,0,Math.PI*2);
-    ctx.fillStyle=V.tracking?'#4caf50':'#e8420a';ctx.fill();
+    ctx.fillStyle=col;ctx.fill();
     ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(i+1,p.x,p.y);
@@ -421,11 +364,8 @@ function drawDots(){
 }
 
 function gridRC(){
-  if(V.gStyle==='equal') return{r:4,c:4};
-  if(V.gStyle==='custom') return{
-    r:parseInt(document.getElementById('gRows').value)||4,
-    c:parseInt(document.getElementById('gCols').value)||4
-  };
+  if(V.gStyle==='equal')return{r:4,c:4};
+  if(V.gStyle==='custom')return{r:parseInt(document.getElementById('gRows').value)||4,c:parseInt(document.getElementById('gCols').value)||4};
   return{r:3,c:3};
 }
 
@@ -451,99 +391,53 @@ function detectCanvas(){
   if(!V.camOn){alert('Start camera first');return;}
   if(vid.readyState<2){alert('Camera not ready yet');return;}
   pinSt('Detecting...');
-
-  var m=getVidMap();
-  var W=m.W, H=m.H;
-
-  // grab frame
-  var fc=document.createElement('canvas'); fc.width=W; fc.height=H;
-  var fx=fc.getContext('2d'); fx.drawImage(vid,0,0,W,H);
+  var m=getVidMap(),W=m.W,H=m.H;
+  var fc=document.createElement('canvas');fc.width=W;fc.height=H;
+  var fx=fc.getContext('2d');fx.drawImage(vid,0,0,W,H);
   var imgd=fx.getImageData(0,0,W,H);
-
-  // grayscale
-  var gray=new Uint8Array(W*H);
-  var d=imgd.data;
-  for(var i=0;i<W*H;i++) gray[i]=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];
-
-  // Sobel edge map
-  var edge=new Uint8Array(W*H);
-  for(var y=1;y<H-1;y++) for(var x=1;x<W-1;x++){
-    var gx=-gray[(y-1)*W+(x-1)]-2*gray[y*W+(x-1)]-gray[(y+1)*W+(x-1)]
-           +gray[(y-1)*W+(x+1)]+2*gray[y*W+(x+1)]+gray[(y+1)*W+(x+1)];
-    var gy=-gray[(y-1)*W+(x-1)]-2*gray[(y-1)*W+x]-gray[(y-1)*W+(x+1)]
-           +gray[(y+1)*W+(x-1)]+2*gray[(y+1)*W+x]+gray[(y+1)*W+(x+1)];
+  var gray=new Uint8Array(W*H),edge=new Uint8Array(W*H),d=imgd.data;
+  for(var i=0;i<W*H;i++)gray[i]=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];
+  for(var y=1;y<H-1;y++)for(var x=1;x<W-1;x++){
+    var gx=-gray[(y-1)*W+(x-1)]-2*gray[y*W+(x-1)]-gray[(y+1)*W+(x-1)]+gray[(y-1)*W+(x+1)]+2*gray[y*W+(x+1)]+gray[(y+1)*W+(x+1)];
+    var gy=-gray[(y-1)*W+(x-1)]-2*gray[(y-1)*W+x]-gray[(y-1)*W+(x+1)]+gray[(y+1)*W+(x-1)]+2*gray[(y+1)*W+x]+gray[(y+1)*W+(x+1)];
     edge[y*W+x]=Math.sqrt(gx*gx+gy*gy)>40?255:0;
   }
-
-  // score candidate rectangles by edge density on perimeter
-  var bestScore=-1, bestRect=null;
-  var step=Math.round(Math.min(W,H)*0.06);
-  var margin=Math.round(Math.min(W,H)*0.07);
-
-  for(var ty=margin;ty<H*0.45;ty+=step){
-    for(var tx=margin;tx<W*0.45;tx+=step){
-      for(var bx=tx+W*0.25;bx<W-margin;bx+=step){
-        for(var by=ty+H*0.25;by<H-margin;by+=step){
-          var score=scoreRect(edge,W,Math.round(tx),Math.round(ty),Math.round(bx),Math.round(by));
-          if(score>bestScore){ bestScore=score; bestRect={x:Math.round(tx),y:Math.round(ty),x2:Math.round(bx),y2:Math.round(by)}; }
-        }
-      }
+  var bestScore=-1,bestRect=null;
+  var step=Math.round(Math.min(W,H)*0.06),margin=Math.round(Math.min(W,H)*0.07);
+  for(var ty=margin;ty<H*0.45;ty+=step)for(var tx=margin;tx<W*0.45;tx+=step)
+    for(var bx=tx+W*0.25;bx<W-margin;bx+=step)for(var by=ty+H*0.25;by<H-margin;by+=step){
+      var sc=scoreRect(edge,W,Math.round(tx),Math.round(ty),Math.round(bx),Math.round(by));
+      if(sc>bestScore){bestScore=sc;bestRect={x:Math.round(tx),y:Math.round(ty),x2:Math.round(bx),y2:Math.round(by)};}
     }
-  }
-
-  if(!bestRect||bestScore<4){
-    pinSt('Could not detect canvas. Use Manual Corners instead.');
-    return;
-  }
-
-  // convert video coords to display coords using the shared mapping
-  var tl=vidToDisp(bestRect.x,  bestRect.y,  m);
-  var tr=vidToDisp(bestRect.x2, bestRect.y,  m);
-  var bl=vidToDisp(bestRect.x,  bestRect.y2, m);
-  var br=vidToDisp(bestRect.x2, bestRect.y2, m);
-
-  V.pins=[tl,tr,bl,br];
-  pinSt('Detected - check dots, adjust with Manual if needed, then Start Tracking');
-  hint.textContent='Detected - check corners';
+  if(!bestRect||bestScore<4){pinSt('Could not detect canvas. Use Manual Corners.');return;}
+  V.pins=[v2d(bestRect.x,bestRect.y,m),v2d(bestRect.x2,bestRect.y,m),v2d(bestRect.x,bestRect.y2,m),v2d(bestRect.x2,bestRect.y2,m)];
+  pinSt('Detected - check dots, then tap Start Tracking');
+  hint.textContent='Canvas detected - check corners';
   hint.style.display='block';
   setTimeout(function(){hint.style.display='none';},2500);
-  draw();
+  // draw() will be called by the running loop automatically
 }
 
 function scoreRect(edge,W,x1,y1,x2,y2){
   var count=0,total=0;
-  for(var x=x1;x<=x2;x++){
-    if(edge[y1*W+x]) count++; total++;
-    if(edge[y2*W+x]) count++; total++;
-  }
-  for(var y=y1+1;y<y2;y++){
-    if(edge[y*W+x1]) count++; total++;
-    if(edge[y*W+x2]) count++; total++;
-  }
+  for(var x=x1;x<=x2;x++){if(edge[y1*W+x])count++;total++;if(edge[y2*W+x])count++;total++;}
+  for(var y=y1+1;y<y2;y++){if(edge[y*W+x1])count++;total++;if(edge[y*W+x2])count++;total++;}
   return total>0?(count/total)*10:0;
 }
 
 // ── TRACKING ─────────────────────────────────────────────────
-// Samples pixel patches around each corner, then each frame
-// searches nearby for where those patches moved to.
-// Runs inside the main startLoop — no separate RAF.
-
 function samplePatches(){
-  if(!V.camOn||V.pins.length!==4||vid.readyState<2) return false;
-  var m=getVidMap();
-  var W=m.W, H=m.H;
-  V.trackC.width=W; V.trackC.height=H;
-  var tc=V.trackC.getContext('2d');
-  tc.drawImage(vid,0,0,W,H);
-  var imgd=tc.getImageData(0,0,W,H);
-  var ps=V.patchSize;
+  if(!V.camOn||V.pins.length!==4||vid.readyState<2)return false;
+  var m=getVidMap(),W=m.W,H=m.H;
+  V.trackC.width=W;V.trackC.height=H;
+  var tc=V.trackC.getContext('2d');tc.drawImage(vid,0,0,W,H);
+  var imgd=tc.getImageData(0,0,W,H),ps=V.patchSize;
   V.patches=[];
   for(var i=0;i<4;i++){
-    var vid_=dispToVid(V.pins[i].x,V.pins[i].y,m);
-    var vx=Math.max(ps,Math.min(W-ps-1,vid_.x));
-    var vy=Math.max(ps,Math.min(H-ps-1,vid_.y));
+    var vp=d2v(V.pins[i].x,V.pins[i].y,m);
+    var vx=Math.max(ps,Math.min(W-ps-1,vp.x)),vy=Math.max(ps,Math.min(H-ps-1,vp.y));
     var patch=[];
-    for(var dy=-ps;dy<=ps;dy+=2) for(var dx=-ps;dx<=ps;dx+=2){
+    for(var dy=-ps;dy<=ps;dy+=2)for(var dx=-ps;dx<=ps;dx+=2){
       var idx=((vy+dy)*W+(vx+dx))*4;
       patch.push(imgd.data[idx],imgd.data[idx+1],imgd.data[idx+2]);
     }
@@ -554,61 +448,53 @@ function samplePatches(){
 
 function patchDist(imgd,W,vx,vy,patch,ps){
   var sum=0,n=0,idx=0;
-  for(var dy=-ps;dy<=ps;dy+=2) for(var dx=-ps;dx<=ps;dx+=2){
+  for(var dy=-ps;dy<=ps;dy+=2)for(var dx=-ps;dx<=ps;dx+=2){
     var px=vx+dx,py=vy+dy;
     if(px<0||px>=W||py<0||py>=imgd.height){idx+=3;continue;}
     var i2=(py*W+px)*4;
     var dr=imgd.data[i2]-patch[idx],dg=imgd.data[i2+1]-patch[idx+1],db=imgd.data[i2+2]-patch[idx+2];
-    sum+=dr*dr+dg*dg+db*db; n++; idx+=3;
+    sum+=dr*dr+dg*dg+db*db;n++;idx+=3;
   }
   return n>0?sum/n:999999;
 }
 
 function trackStep(){
-  if(V.pins.length!==4||V.patches.length!==4||vid.readyState<2) return;
-  var m=getVidMap();
-  var W=m.W, H=m.H;
-  V.trackC.width=W; V.trackC.height=H;
-  var tc=V.trackC.getContext('2d');
-  tc.drawImage(vid,0,0,W,H);
-  var imgd=tc.getImageData(0,0,W,H);
-  var ps=V.patchSize, sr=V.searchR;
-
+  if(V.pins.length!==4||V.patches.length!==4||vid.readyState<2)return;
+  var m=getVidMap(),W=m.W,H=m.H;
+  V.trackC.width=W;V.trackC.height=H;
+  var tc=V.trackC.getContext('2d');tc.drawImage(vid,0,0,W,H);
+  var imgd=tc.getImageData(0,0,W,H),ps=V.patchSize,sr=V.searchR;
   for(var i=0;i<4;i++){
     var ref=V.patches[i];
     var bestDist=patchDist(imgd,W,ref.vx,ref.vy,ref.patch,ps);
-    var bestX=ref.vx, bestY=ref.vy;
-    for(var dy=-sr;dy<=sr;dy+=3) for(var dx=-sr;dx<=sr;dx+=3){
-      var nx=ref.vx+dx, ny=ref.vy+dy;
-      if(nx<ps||nx>=W-ps||ny<ps||ny>=H-ps) continue;
+    var bestX=ref.vx,bestY=ref.vy;
+    for(var dy=-sr;dy<=sr;dy+=3)for(var dx=-sr;dx<=sr;dx+=3){
+      var nx=ref.vx+dx,ny=ref.vy+dy;
+      if(nx<ps||nx>=W-ps||ny<ps||ny>=H-ps)continue;
       var dist=patchDist(imgd,W,nx,ny,ref.patch,ps);
-      if(dist<bestDist){ bestDist=dist; bestX=nx; bestY=ny; }
+      if(dist<bestDist){bestDist=dist;bestX=nx;bestY=ny;}
     }
-    // update position if confidence good enough
     if(bestDist<6000){
-      ref.vx=bestX; ref.vy=bestY;
-      var disp=vidToDisp(bestX,bestY,m);
-      V.pins[i]={x:disp.x, y:disp.y};
+      ref.vx=bestX;ref.vy=bestY;
+      V.pins[i]=v2d(bestX,bestY,m);
     }
   }
 }
 
 function toggleTracking(){
-  if(V.pins.length!==4){ alert('Set all 4 corners first'); return; }
-  if(V.tracking) stopTracking(); else startTracking();
+  if(V.pins.length!==4){alert('Set all 4 corners first');return;}
+  if(V.tracking)stopTracking();else startTracking();
 }
 
 function startTracking(){
-  if(!V.camOn){ alert('Start camera first'); return; }
-  if(V.pins.length!==4){ alert('Set all 4 corners first'); return; }
-  if(!samplePatches()){ alert('Camera not ready'); return; }
+  if(!V.camOn){alert('Start camera first');return;}
+  if(V.pins.length!==4){alert('Set all 4 corners first');return;}
+  if(!samplePatches()){alert('Camera not ready');return;}
   V.tracking=true;
   document.getElementById('bTrack').textContent='Stop Tracking';
   document.getElementById('bTrack').classList.add('on');
-  pinSt('Tracking active - dots turn green - move phone slowly');
-  // make sure the main loop is running
-  if(!V.camOn) return;
-  startLoop();
+  pinSt('Tracking active - dots green - outline follows canvas');
+  // loop is already running from startCam - no need to restart it
 }
 
 function stopTracking(){
@@ -623,70 +509,58 @@ function togglePin(){
   V.pinMode=!V.pinMode;
   var btn=document.getElementById('bPin');
   if(V.pinMode){
-    btn.classList.add('on');
-    pinOvl.style.display='block';
+    btn.classList.add('on');pinOvl.style.display='block';
     hint.style.display='block';
     hint.textContent='Tap corner '+(V.pins.length+1)+' of 4 (TL TR BL BR)';
-  } else {
-    btn.classList.remove('on');
-    pinOvl.style.display='none';
-    hint.style.display='none';
+  }else{
+    btn.classList.remove('on');pinOvl.style.display='none';hint.style.display='none';
   }
 }
 
 pinOvl.addEventListener('pointerdown',function(e){
-  e.preventDefault();
-  if(!V.pinMode) return;
+  e.preventDefault();if(!V.pinMode)return;
   var r=pinOvl.getBoundingClientRect();
   var px=(e.clientX-r.left)*(cvs.width/r.width);
   var py=(e.clientY-r.top)*(cvs.height/r.height);
   if(V.pins.length<4){
     V.pins.push({x:px,y:py});
     if(V.pins.length===4){
-      V.pinMode=false;
-      document.getElementById('bPin').classList.remove('on');
-      pinOvl.style.display='none'; hint.style.display='none';
-      pinSt('4 corners set. Tap Start Tracking to follow canvas.');
-    } else {
+      V.pinMode=false;document.getElementById('bPin').classList.remove('on');
+      pinOvl.style.display='none';hint.style.display='none';
+      pinSt('4 corners set - tap Start Tracking');
+    }else{
       hint.textContent='Tap corner '+(V.pins.length+1)+' of 4';
       pinSt(V.pins.length+' of 4 corners set');
     }
-    draw();
   }
 });
 
 function clearPins(){
-  stopTracking();
-  V.pins=[]; V.patches=[]; V.pinMode=false;
+  stopTracking();V.pins=[];V.patches=[];V.pinMode=false;
   document.getElementById('bPin').classList.remove('on');
-  pinOvl.style.display='none'; hint.style.display='none';
+  pinOvl.style.display='none';hint.style.display='none';
   pinSt('No corners set');
-  draw();
 }
 
 // ── CROP ─────────────────────────────────────────────────────
 function initBox(){
-  if(!cImg.naturalWidth) return;
-  var vw=cLayer.offsetWidth, vh=cLayer.offsetHeight;
-  var iw=cImg.naturalWidth, ih=cImg.naturalHeight;
-  var car=(parseFloat(document.getElementById('cw').value)||30)/
-          (parseFloat(document.getElementById('ch2').value)||40);
+  if(!cImg.naturalWidth)return;
+  var vw=cLayer.offsetWidth,vh=cLayer.offsetHeight;
+  var iw=cImg.naturalWidth,ih=cImg.naturalHeight;
+  var car=(parseFloat(document.getElementById('cw').value)||30)/(parseFloat(document.getElementById('ch2').value)||40);
   var dw,dh;
   if(iw/ih>vw/vh){dw=vw;dh=vw/(iw/ih);}else{dh=vh;dw=vh*(iw/ih);}
-  var dx=(vw-dw)/2, dy=(vh-dh)/2;
+  var dx=(vw-dw)/2,dy=(vh-dh)/2;
   V.imgDisp={x:dx,y:dy,w:dw,h:dh};
-  cImg.style.left=dx+'px'; cImg.style.top=dy+'px';
-  cImg.style.width=dw+'px'; cImg.style.height=dh+'px';
+  cImg.style.left=dx+'px';cImg.style.top=dy+'px';cImg.style.width=dw+'px';cImg.style.height=dh+'px';
   var bw,bh;
   if(car>dw/dh){bw=dw*0.88;bh=bw/car;}else{bh=dh*0.88;bw=bh*car;}
-  V.cropBox={x:dx+(dw-bw)/2,y:dy+(dh-bh)/2,w:bw,h:bh};
-  syncBox();
+  V.cropBox={x:dx+(dw-bw)/2,y:dy+(dh-bh)/2,w:bw,h:bh};syncBox();
 }
 
 function syncBox(){
   var b=V.cropBox;
-  cBox.style.left=b.x+'px'; cBox.style.top=b.y+'px';
-  cBox.style.width=b.w+'px'; cBox.style.height=b.h+'px';
+  cBox.style.left=b.x+'px';cBox.style.top=b.y+'px';cBox.style.width=b.w+'px';cBox.style.height=b.h+'px';
 }
 
 var _d=null;
@@ -696,46 +570,45 @@ cBox.addEventListener('pointerdown',function(e){
   var h=e.target.dataset?e.target.dataset.h:null;
   var p=xy(e);
   _d={h:h||'',x:p.x,y:p.y,b:{x:V.cropBox.x,y:V.cropBox.y,w:V.cropBox.w,h:V.cropBox.h}};
-  e.stopPropagation(); e.preventDefault();
+  e.stopPropagation();e.preventDefault();
 });
 
 document.addEventListener('pointermove',function(e){
-  if(!_d) return;
+  if(!_d)return;
   var p=xy(e),dx=p.x-_d.x,dy=p.y-_d.y;
-  var b=Object.assign({},_d.b), img=V.imgDisp;
-  var car=(parseFloat(document.getElementById('cw').value)||30)/
-          (parseFloat(document.getElementById('ch2').value)||40);
+  var b=Object.assign({},_d.b),img=V.imgDisp;
+  var car=(parseFloat(document.getElementById('cw').value)||30)/(parseFloat(document.getElementById('ch2').value)||40);
   if(!_d.h){
     b.x=Math.max(img.x,Math.min(img.x+img.w-b.w,_d.b.x+dx));
     b.y=Math.max(img.y,Math.min(img.y+img.h-b.h,_d.b.y+dy));
-  } else {
+  }else{
     var h=_d.h,ob=_d.b;
     if(h==='br'){b.w=Math.max(40,ob.w+dx);b.h=b.w/car;}
     else if(h==='bl'){b.w=Math.max(40,ob.w-dx);b.h=b.w/car;b.x=ob.x+ob.w-b.w;}
     else if(h==='tr'){b.w=Math.max(40,ob.w+dx);b.h=b.w/car;b.y=ob.y+ob.h-b.h;}
     else if(h==='tl'){b.w=Math.max(40,ob.w-dx);b.h=b.w/car;b.x=ob.x+ob.w-b.w;b.y=ob.y+ob.h-b.h;}
-    b.x=Math.max(img.x,b.x); b.y=Math.max(img.y,b.y);
-    if(b.x+b.w>img.x+img.w) b.w=img.x+img.w-b.x;
-    if(b.y+b.h>img.y+img.h) b.h=img.y+img.h-b.y;
+    b.x=Math.max(img.x,b.x);b.y=Math.max(img.y,b.y);
+    if(b.x+b.w>img.x+img.w)b.w=img.x+img.w-b.x;
+    if(b.y+b.h>img.y+img.h)b.h=img.y+img.h-b.y;
   }
-  V.cropBox=b; syncBox();
+  V.cropBox=b;syncBox();
 });
-document.addEventListener('pointerup',    function(){_d=null;});
+document.addEventListener('pointerup',function(){_d=null;});
 document.addEventListener('pointercancel',function(){_d=null;});
 
 function applyCrop(){
-  if(!cImg.naturalWidth) return;
-  var img=V.imgDisp, b=V.cropBox;
+  if(!cImg.naturalWidth)return;
+  var img=V.imgDisp,b=V.cropBox;
   var sx=Math.round((b.x-img.x)*(cImg.naturalWidth/img.w));
   var sy=Math.round((b.y-img.y)*(cImg.naturalHeight/img.h));
   var sw=Math.round(b.w*(cImg.naturalWidth/img.w));
   var sh=Math.round(b.h*(cImg.naturalHeight/img.h));
-  var t=document.createElement('canvas'); t.width=sw; t.height=sh;
+  var t=document.createElement('canvas');t.width=sw;t.height=sh;
   t.getContext('2d').drawImage(cImg,sx,sy,sw,sh,0,0,sw,sh);
   V.lastCrop=t.toDataURL('image/jpeg',0.92);
   var cropped=new Image();
   cropped.onload=function(){
-    V.img=cropped; buildOutline(cropped);
+    V.img=cropped;buildOutline(cropped);
     document.getElementById('bApply').style.display='none';
     document.getElementById('cropBtns').style.display='flex';
     document.getElementById('cropMsg').textContent='Done. Download or Save, then go to AR tab.';
@@ -743,20 +616,9 @@ function applyCrop(){
   cropped.src=V.lastCrop;
 }
 
-function dlCrop(){
-  if(!V.lastCrop){alert('Apply a crop first');return;}
-  doDownload(V.lastCrop,'paintguide-crop.jpg');
-}
-
-function saveCrop(){
-  if(!V.lastCrop){alert('Apply a crop first');return;}
-  V.saves.push(V.lastCrop); renderThumbs();
-  document.getElementById('cropMsg').textContent='Saved to Gallery tab!';
-}
-
-function doDownload(dataURL,name){
-  var a=document.createElement('a'); a.href=dataURL; a.download=name; a.click();
-}
+function dlCrop(){if(!V.lastCrop){alert('Apply a crop first');return;}doDownload(V.lastCrop,'paintguide-crop.jpg');}
+function saveCrop(){if(!V.lastCrop){alert('Apply a crop first');return;}V.saves.push(V.lastCrop);renderThumbs();document.getElementById('cropMsg').textContent='Saved to Gallery tab!';}
+function doDownload(dataURL,name){var a=document.createElement('a');a.href=dataURL;a.download=name;a.click();}
 
 // ── SAVED ────────────────────────────────────────────────────
 function renderThumbs(){
@@ -764,39 +626,22 @@ function renderThumbs(){
   if(!V.saves.length){el.innerHTML='<span style="font-size:0.7rem;color:#444">No saved crops yet</span>';return;}
   el.innerHTML='';
   for(var i=0;i<V.saves.length;i++){
-    (function(idx){
-      var img=document.createElement('img');
-      img.src=V.saves[idx];
-      img.onclick=function(){openViewer(V.saves[idx]);};
-      el.appendChild(img);
-    })(i);
+    (function(idx){var img=document.createElement('img');img.src=V.saves[idx];img.onclick=function(){openViewer(V.saves[idx]);};el.appendChild(img);})(i);
   }
 }
-
-function clearSaved(){ V.saves=[]; renderThumbs(); }
-
-function openViewer(src){
-  document.getElementById('vImg').src=src;
-  document.getElementById('viewer').style.display='flex';
-}
-function closeViewer(){
-  document.getElementById('viewer').style.display='none';
-  document.getElementById('vImg').src='';
-}
-function dlViewed(){
-  var src=document.getElementById('vImg').src;
-  if(src) doDownload(src,'paintguide-crop.jpg');
-}
+function clearSaved(){V.saves=[];renderThumbs();}
+function openViewer(src){document.getElementById('vImg').src=src;document.getElementById('viewer').style.display='flex';}
+function closeViewer(){document.getElementById('viewer').style.display='none';document.getElementById('vImg').src='';}
+function dlViewed(){var src=document.getElementById('vImg').src;if(src)doDownload(src,'paintguide-crop.jpg');}
 
 // ── GRID ─────────────────────────────────────────────────────
 function gStyle(el){
-  var g=el.dataset.g, was=el.classList.contains('on');
+  var g=el.dataset.g,was=el.classList.contains('on');
   document.querySelectorAll('[data-g]').forEach(function(e){e.classList.remove('on');});
   if(!was){el.classList.add('on');V.gStyle=g;}else V.gStyle=null;
-  document.getElementById('gCustom').style.display=(V.gStyle==='custom')?'flex':'none';
+  document.getElementById('gCustom').style.display=V.gStyle==='custom'?'flex':'none';
   draw();
 }
-
 function vTog(el){
   el.classList.toggle('on');
   V.showOl=document.querySelector('[data-v="ol"]').classList.contains('on');
@@ -807,12 +652,12 @@ function vTog(el){
 // ── RESET ────────────────────────────────────────────────────
 function resetAll(){
   stopTracking();
-  V.img=null; V.outC=null; V.pins=[]; V.patches=[]; V.pinMode=false;
-  V.lastCrop=null; V.gStyle=null; V.op=0.65; V.sc=1.0; V.gop=0.4;
-  cancelAnimationFrame(V.raf);
+  V.img=null;V.outC=null;V.pins=[];V.patches=[];V.pinMode=false;
+  V.lastCrop=null;V.gStyle=null;V.op=0.65;V.sc=1.0;V.gop=0.4;
+  cancelAnimationFrame(V.raf);V.raf=null;
   ctx.clearRect(0,0,cvs.width,cvs.height);
-  cLayer.style.display='none'; cImg.src='';
-  pinOvl.style.display='none'; hint.style.display='none';
+  cLayer.style.display='none';cImg.src='';
+  pinOvl.style.display='none';hint.style.display='none';
   document.getElementById('bPin').classList.remove('on');
   document.getElementById('pinSt').textContent='No corners set';
   document.getElementById('bApply').style.display='none';
@@ -820,15 +665,14 @@ function resetAll(){
   document.getElementById('cropMsg').textContent='Load an image, drag the box, then tap Apply Crop';
   document.querySelectorAll('[data-g]').forEach(function(e){e.classList.remove('on');});
   document.getElementById('gCustom').style.display='none';
-  if(!V.camOn) ph.style.display='flex';
+  if(!V.camOn)ph.style.display='flex';
+  else startLoop(); // restart loop if camera is still on
   st(V.camOn?'Reset - load image':'Reset - start camera then load image');
   tab('ar');
 }
 
 window.addEventListener('resize',function(){draw();});
-if(location.protocol==='file:'){
-  alert('Camera needs HTTPS. Use your GitHub Pages link, not a local file.');
-}
+if(location.protocol==='file:'){alert('Camera needs HTTPS. Use your GitHub Pages link.');}
 </script>
 </body>
 </html>
