@@ -12,7 +12,7 @@ body{display:flex;flex-direction:column;height:100dvh;}
 video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;}
 #tabs{display:flex;background:#1a1a1a;border-bottom:1px solid #333;flex-shrink:0;}
-#tabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#666;font-size:0.72rem;padding:10px 2px;cursor:pointer;font-family:sans-serif;text-transform:uppercase;}
+#tabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:#666;font-size:0.68rem;padding:10px 1px;cursor:pointer;font-family:sans-serif;text-transform:uppercase;}
 #tabs button.active{color:#e8420a;border-bottom-color:#e8420a;}
 #panel{background:#1a1a1a;padding:11px 13px 18px;flex-shrink:0;}
 .pane{display:none;flex-direction:column;gap:9px;}.pane.on{display:flex;}
@@ -34,6 +34,8 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
 .sz label{font-size:0.68rem;color:#666;}
 .sz input[type=number]{background:#252525;border:1px solid #3a3a3a;color:#f0ebe0;border-radius:6px;padding:5px 7px;width:52px;text-align:center;font-size:0.83rem;font-family:sans-serif;}
 .note{font-size:0.68rem;color:#666;line-height:1.65;}.note b{color:#f0ebe0;}
+
+/* CROP layer */
 #cropLayer{position:absolute;inset:0;z-index:5;display:none;}
 #cimg{position:absolute;pointer-events:none;user-select:none;}
 #cropBox{position:absolute;border:2px solid #e8420a;box-shadow:0 0 0 9999px rgba(0,0,0,0.55);touch-action:none;cursor:move;}
@@ -42,30 +44,67 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
 .ch.tr{top:-2px;right:-2px;border-left:none;border-bottom:none;}
 .ch.bl{bottom:-2px;left:-2px;border-right:none;border-top:none;}
 .ch.br{bottom:-2px;right:-2px;border-left:none;border-top:none;}
+
+/* ZOOM selection layer - shown over viewport in Zoom mode */
+#zoomLayer{position:absolute;inset:0;z-index:6;display:none;touch-action:none;}
+#zoomImgEl{position:absolute;pointer-events:none;user-select:none;}
+#zoomSelBox{position:absolute;border:2px dashed #4caf50;display:none;pointer-events:none;}
+
+/* ZOOM VIEWER fullscreen overlay */
+#zoomViewer{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:#0a0a0a;overflow:hidden;touch-action:none;
+}
+#zoomViewerImg{
+  position:absolute;transform-origin:0 0;
+  user-select:none;-webkit-user-drag:none;
+}
+#zoomViewerBar{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(10,10,10,0.85);
+  padding:10px 14px 20px;
+  display:flex;flex-direction:column;gap:6px;
+  z-index:10;pointer-events:auto;
+}
+#zoomViewerInfo{font-size:0.7rem;color:#666;text-align:center;}
+#zoomViewerClose{background:#e8420a;color:#fff;border:none;border-radius:8px;padding:12px;font-size:0.82rem;cursor:pointer;font-family:sans-serif;width:100%;}
+
+/* PIN hint */
 #hint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);border:1px solid #e8420a;border-radius:8px;padding:8px 18px;font-size:0.78rem;color:#f0ebe0;z-index:20;pointer-events:none;white-space:nowrap;display:none;}
 #pinOverlay{position:absolute;inset:0;z-index:15;display:none;cursor:crosshair;}
+
 #ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
 #ph p{color:#444;font-size:0.85rem;text-align:center;line-height:2;}#ph b{color:#666;}
+
+/* SAVED thumbs */
 #thumbs{display:flex;gap:8px;overflow-x:auto;min-height:58px;align-items:center;}
 #thumbs img{width:56px;height:56px;object-fit:cover;border-radius:6px;border:2px solid #333;cursor:pointer;flex-shrink:0;}
+
+/* SAVED viewer */
 #viewer{display:none;position:fixed;inset:0;z-index:99;background:#000;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;}
 #viewer img{max-width:100%;max-height:72vh;object-fit:contain;border-radius:6px;}
 #viewer .row{width:100%;max-width:400px;}
+
 #fileAR,#fileCrop{display:none;}
 </style>
 </head>
 <body>
+
 <div id="tabs">
   <button class="active" onclick="tab('ar')">AR</button>
   <button onclick="tab('crop')">Crop</button>
   <button onclick="tab('pin')">Pin</button>
   <button onclick="tab('grid')">Grid</button>
+  <button onclick="tab('zoom')">Zoom</button>
   <button onclick="tab('saved')">Saved</button>
 </div>
+
 <div id="viewport">
   <video id="vid" autoplay playsinline muted></video>
   <canvas id="cvs"></canvas>
   <div id="pinOverlay"></div>
+
+  <!-- Crop layer -->
   <div id="cropLayer">
     <img id="cimg" alt="">
     <div id="cropBox">
@@ -73,10 +112,20 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
       <div class="ch bl" data-h="bl"></div><div class="ch br" data-h="br"></div>
     </div>
   </div>
+
+  <!-- Zoom selection layer -->
+  <div id="zoomLayer">
+    <img id="zoomImgEl" alt="">
+    <div id="zoomSelBox"></div>
+  </div>
+
   <div id="hint"></div>
   <div id="ph"><p>Tap <b>Start Camera</b><br>then <b>Load Image</b></p></div>
 </div>
+
 <div id="panel">
+
+  <!-- AR -->
   <div class="pane on" id="pAR">
     <div class="row">
       <button class="p" id="bCam" onclick="toggleCam()">Start Camera</button>
@@ -87,6 +136,8 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
     <div class="sl"><span>Size</span><input type="range" min="20" max="150" value="100" oninput="V.sc=this.value/100;lbl('lSc',this.value+'%');draw()"><b id="lSc">100%</b></div>
     <div id="st" class="note">Start camera, then load image</div>
   </div>
+
+  <!-- CROP -->
   <div class="pane" id="pCrop">
     <div class="sz">
       <label>Canvas</label><input type="number" id="cw" value="30" min="1" oninput="initBox()">
@@ -102,6 +153,8 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
     </div>
     <div id="cropMsg" class="note">Load an image, drag the box, then tap Apply Crop</div>
   </div>
+
+  <!-- PIN -->
   <div class="pane" id="pPin">
     <div class="row">
       <button class="p" id="bDetect" onclick="detectCanvas()">Auto Detect</button>
@@ -113,12 +166,14 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
     </div>
     <div class="note">
       <b>Sequence:</b> Start Camera + Load Image first.<br>
-      <b>Auto Detect:</b> finds canvas rectangle.<br>
+      <b>Auto Detect:</b> finds canvas edges automatically.<br>
       <b>Manual:</b> tap TL, TR, BL, BR on screen.<br>
       <b>Tracking:</b> outline stays locked as you move.
     </div>
     <div id="pinSt" class="note">No corners set</div>
   </div>
+
+  <!-- GRID -->
   <div class="pane" id="pGrid">
     <div class="chips">
       <span class="chip" data-g="equal" onclick="gStyle(this)">Equal 4x4</span>
@@ -135,12 +190,37 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
     </div>
     <div class="sl"><span>Grid opacity</span><input type="range" min="5" max="100" value="40" oninput="V.gop=this.value/100;lbl('lGop',this.value+'%');draw()"><b id="lGop">40%</b></div>
   </div>
+
+  <!-- ZOOM -->
+  <div class="pane" id="pZoom">
+    <div class="sz">
+      <label>Canvas</label>
+      <input type="number" id="zcw" value="30" min="1">
+      <label>x</label>
+      <input type="number" id="zch" value="40" min="1">
+      <label>cm</label>
+    </div>
+    <div class="note">Canvas dimensions above should match your real canvas. The image loaded in AR or Crop is assumed to be exactly this size.</div>
+    <div class="row">
+      <button class="p" id="bZoomMode" onclick="toggleZoomMode()">Draw Selection Box</button>
+      <button class="s" onclick="clearZoomSel()">Clear</button>
+    </div>
+    <div class="row" id="zoomOpenRow" style="display:none">
+      <button class="g" onclick="openZoomViewer()">Open Zoomed View</button>
+    </div>
+    <div id="zoomMsg" class="note">Load an image in AR or Crop tab first, then drag a box on the image to select a region.</div>
+  </div>
+
+  <!-- SAVED -->
   <div class="pane" id="pSaved">
     <div class="note">Tap thumbnail to view full size or download</div>
     <div id="thumbs"><span style="font-size:0.7rem;color:#444">No saved crops yet</span></div>
     <div class="row"><button class="warn" onclick="clearSaved()">Clear All</button></div>
   </div>
-</div>
+
+</div><!-- /panel -->
+
+<!-- Saved image viewer -->
 <div id="viewer">
   <img id="vImg" src="" alt="">
   <div class="row">
@@ -148,10 +228,21 @@ button.g.on{background:#0d3018;border-color:#4caf50;color:#4caf50;}
     <button class="s" onclick="closeViewer()">Close</button>
   </div>
 </div>
+
+<!-- Zoom region viewer - fullscreen, pannable -->
+<div id="zoomViewer">
+  <img id="zoomViewerImg" src="" alt="" draggable="false">
+  <div id="zoomViewerBar">
+    <div id="zoomViewerInfo"></div>
+    <button id="zoomViewerClose" onclick="closeZoomViewer()">Close</button>
+  </div>
+</div>
+
 <input type="file" id="fileAR" accept="image/*">
 <input type="file" id="fileCrop" accept="image/*">
 
 <script>
+// ── STATE ────────────────────────────────────────────────────
 var V={
   op:0.65,sc:1.0,gop:0.4,
   gStyle:null,showOl:true,showGr:true,
@@ -161,9 +252,14 @@ var V={
   lastCrop:null,saves:[],
   raf:null,stream:null,camOn:false,
   img:null,outC:null,
-  imgDisp:{x:0,y:0,w:0,h:0},cropBox:{x:0,y:0,w:0,h:0}
+  imgDisp:{x:0,y:0,w:0,h:0},cropBox:{x:0,y:0,w:0,h:0},
+  // zoom state
+  zoomMode:false,
+  zoomSel:null,       // {x,y,w,h} in image pixel coords
+  zoomImgDisp:{x:0,y:0,w:0,h:0}  // how zoomImgEl is displayed
 };
 
+// ── DOM ──────────────────────────────────────────────────────
 var vid=document.getElementById('vid');
 var cvs=document.getElementById('cvs');
 var ctx=cvs.getContext('2d');
@@ -174,10 +270,16 @@ var ph=document.getElementById('ph');
 var hint=document.getElementById('hint');
 var bCam=document.getElementById('bCam');
 var pinOvl=document.getElementById('pinOverlay');
+var zoomLayer=document.getElementById('zoomLayer');
+var zoomImgEl=document.getElementById('zoomImgEl');
+var zoomSelBox=document.getElementById('zoomSelBox');
+var zoomViewer=document.getElementById('zoomViewer');
+var zoomViewerImg=document.getElementById('zoomViewerImg');
 
 function lbl(id,v){document.getElementById(id).textContent=v;}
 function st(msg){document.getElementById('st').textContent=msg;}
 function pinSt(msg){document.getElementById('pinSt').textContent=msg;}
+function zoomMsg(msg){document.getElementById('zoomMsg').textContent=msg;}
 
 // ── VIDEO/DISPLAY COORD MAPPING ──────────────────────────────
 function getVidMap(){
@@ -192,8 +294,8 @@ function v2d(vx,vy,m){return{x:vx*m.scale+m.offX,y:vy*m.scale+m.offY};}
 function d2v(dx,dy,m){return{x:Math.round((dx-m.offX)/m.scale),y:Math.round((dy-m.offY)/m.scale)};}
 
 // ── TABS ─────────────────────────────────────────────────────
-var tabIds=['ar','crop','pin','grid','saved'];
-var paneIds=['pAR','pCrop','pPin','pGrid','pSaved'];
+var tabIds=['ar','crop','pin','grid','zoom','saved'];
+var paneIds=['pAR','pCrop','pPin','pGrid','pZoom','pSaved'];
 function tab(t){
   var btns=document.querySelectorAll('#tabs button');
   for(var i=0;i<tabIds.length;i++){
@@ -202,6 +304,8 @@ function tab(t){
     document.getElementById(paneIds[i]).classList.toggle('on',on);
   }
   cLayer.style.display=t==='crop'?'block':'none';
+  zoomLayer.style.display=t==='zoom'?'block':'none';
+  if(t==='zoom') initZoomLayer(); else exitZoomMode();
   if(V.pinMode&&t!=='pin'){
     V.pinMode=false;pinOvl.style.display='none';hint.style.display='none';
     document.getElementById('bPin').classList.remove('on');
@@ -217,10 +321,8 @@ function startCam(){
   navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
   .then(function(s){
     V.stream=s;vid.srcObject=s;vid.play().catch(function(){});
-    V.camOn=true;
-    bCam.textContent='Stop Camera';bCam.classList.add('on');
-    ph.style.display='none';
-    startLoop();
+    V.camOn=true;bCam.textContent='Stop Camera';bCam.classList.add('on');
+    ph.style.display='none';startLoop();
     st(V.img?'Camera on - outline active':'Camera on - load image');
   })
   .catch(function(e){
@@ -288,12 +390,7 @@ function buildOutline(img){
 function startLoop(){
   cancelAnimationFrame(V.raf);V.raf=null;
   var frame=0;
-  function loop(){
-    frame++;
-    if(V.tracking&&frame%3===0)trackStep();
-    draw();
-    V.raf=requestAnimationFrame(loop);
-  }
+  function loop(){frame++;if(V.tracking&&frame%3===0)trackStep();draw();V.raf=requestAnimationFrame(loop);}
   loop();
 }
 
@@ -302,30 +399,19 @@ function draw(){
   cvs.width=vw;cvs.height=vh;
   ctx.clearRect(0,0,vw,vh);
   if(!V.img||!V.outC)return;
-
   if(V.pins.length===4){
-    // Warp outline to fit the 4 pins
-    var p=V.pins;
-    var iw=V.outC.width,ih=V.outC.height;
+    var p=V.pins,iw=V.outC.width,ih=V.outC.height;
     var t=document.createElement('canvas');t.width=vw;t.height=vh;
     var tc=t.getContext('2d');
     if(V.showOl){
       tc.globalAlpha=V.op;
-      // Triangle 1: image top-left triangle -> screen top-left triangle
-      // img pts: (0,0),(iw,0),(0,ih)  screen pts: p[0],p[1],p[2]
-      warpTri(tc,V.outC,
-        0,0,   iw,0,  0,ih,
-        p[0].x,p[0].y, p[1].x,p[1].y, p[2].x,p[2].y);
-      // Triangle 2: image bottom-right triangle -> screen bottom-right triangle
-      // img pts: (iw,0),(0,ih),(iw,ih)  screen pts: p[1],p[2],p[3]
-      warpTri(tc,V.outC,
-        iw,0,  0,ih,  iw,ih,
-        p[1].x,p[1].y, p[2].x,p[2].y, p[3].x,p[3].y);
+      warpTri(tc,V.outC,0,0,iw,0,0,ih,p[0].x,p[0].y,p[1].x,p[1].y,p[2].x,p[2].y);
+      warpTri(tc,V.outC,iw,0,0,ih,iw,ih,p[1].x,p[1].y,p[2].x,p[2].y,p[3].x,p[3].y);
       tc.globalAlpha=1;
     }
     ctx.drawImage(t,0,0);
     if(V.gStyle&&V.showGr)drawGridP(p);
-  } else {
+  }else{
     var ar=V.outC.width/V.outC.height,bw,bh;
     if(ar>vw/vh){bw=vw*V.sc;bh=bw/ar;}else{bh=vh*V.sc;bw=bh*ar;}
     var bx=(vw-bw)/2,by=(vh-bh)/2;
@@ -335,17 +421,10 @@ function draw(){
   drawDots();
 }
 
-// ── WARP TRIANGLE ─────────────────────────────────────────────
-// Maps image pixels at (ix1,iy1),(ix2,iy2),(ix3,iy3)
-// to screen positions (sx1,sy1),(sx2,sy2),(sx3,sy3)
-// Uses canvas transform(a,b,c,d,e,f) where:
-//   screen_x = a*img_x + c*img_y + e
-//   screen_y = b*img_x + d*img_y + f
+// ── WARP ─────────────────────────────────────────────────────
 function warpTri(tc,img,ix1,iy1,ix2,iy2,ix3,iy3,sx1,sy1,sx2,sy2,sx3,sy3){
   tc.save();
-  // clip to destination triangle
   tc.beginPath();tc.moveTo(sx1,sy1);tc.lineTo(sx2,sy2);tc.lineTo(sx3,sy3);tc.closePath();tc.clip();
-  // solve affine: find a,b,c,d,e,f such that image pts map to screen pts
   var det=ix1*(iy2-iy3)-iy1*(ix2-ix3)+(ix2*iy3-ix3*iy2);
   if(Math.abs(det)<0.001){tc.restore();return;}
   var a=(sx1*(iy2-iy3)-iy1*(sx2-sx3)+(sx2*iy3-sx3*iy2))/det;
@@ -354,12 +433,7 @@ function warpTri(tc,img,ix1,iy1,ix2,iy2,ix3,iy3,sx1,sy1,sx2,sy2,sx3,sy3){
   var b=(sy1*(iy2-iy3)-iy1*(sy2-sy3)+(sy2*iy3-sy3*iy2))/det;
   var d=(ix1*(sy2-sy3)-sy1*(ix2-ix3)+(ix2*sy3-ix3*sy2))/det;
   var f=(ix1*(iy2*sy3-iy3*sy2)-iy1*(ix2*sy3-ix3*sy2)+sy1*(ix2*iy3-ix3*iy2))/det;
-  // canvas transform maps drawing coords, not image pixels directly
-  // we drawImage(img,0,0) so img pixel (px,py) = drawing coord (px,py)
-  // transform(a,b,c,d,e,f) maps (px,py) -> (a*px+c*py+e, b*px+d*py+f)
-  tc.transform(a,b,c,d,e,f);
-  tc.drawImage(img,0,0);
-  tc.restore();
+  tc.transform(a,b,c,d,e,f);tc.drawImage(img,0,0);tc.restore();
 }
 
 function drawDots(){
@@ -369,8 +443,7 @@ function drawDots(){
     ctx.beginPath();ctx.arc(p.x,p.y,12,0,Math.PI*2);
     ctx.fillStyle=col;ctx.fill();
     ctx.fillStyle='#fff';ctx.font='bold 11px sans-serif';
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(i+1,p.x,p.y);
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(i+1,p.x,p.y);
   }
 }
 
@@ -395,6 +468,233 @@ function drawGridP(p){
   ctx.restore();
 }
 
+// ── ZOOM FEATURE ─────────────────────────────────────────────
+// Shows V.img (the reference/cropped image) in the zoom layer.
+// User drags a box over the image.
+// On Open: renders the selected region at the correct physical scale
+// (pixels per cm derived from canvas dimensions) and shows it
+// fullscreen with pan + pinch zoom.
+
+function initZoomLayer(){
+  if(!V.img){zoomMsg('Load an image in the AR or Crop tab first.');return;}
+  // Display the image in the zoom layer
+  var vw=zoomLayer.offsetWidth, vh=zoomLayer.offsetHeight;
+  var iw=V.img.width, ih=V.img.height;
+  var dw,dh;
+  if(iw/ih>vw/vh){dw=vw;dh=vw/(iw/ih);}else{dh=vh;dw=vh*(iw/ih);}
+  var dx=(vw-dw)/2, dy=(vh-dh)/2;
+  V.zoomImgDisp={x:dx,y:dy,w:dw,h:dh};
+  zoomImgEl.src=V.img.src||srcFromImg(V.img);
+  zoomImgEl.style.left=dx+'px'; zoomImgEl.style.top=dy+'px';
+  zoomImgEl.style.width=dw+'px'; zoomImgEl.style.height=dh+'px';
+  zoomSelBox.style.display='none';
+  zoomMsg('Drag a box on the image to select a region, then tap Open Zoomed View.');
+  document.getElementById('zoomOpenRow').style.display='none';
+}
+
+// Get src from img element (works for both loaded img and canvas-derived img)
+function srcFromImg(img){return img.src||'';}
+
+function exitZoomMode(){
+  V.zoomMode=false;
+  var btn=document.getElementById('bZoomMode');
+  if(btn)btn.classList.remove('on');
+  zoomImgEl.src='';
+  zoomSelBox.style.display='none';
+}
+
+function toggleZoomMode(){
+  if(!V.img){zoomMsg('Load an image in the AR or Crop tab first.');return;}
+  V.zoomMode=!V.zoomMode;
+  var btn=document.getElementById('bZoomMode');
+  btn.classList.toggle('on',V.zoomMode);
+  btn.textContent=V.zoomMode?'Cancel Selection':'Draw Selection Box';
+  if(V.zoomMode){
+    V.zoomSel=null;
+    zoomSelBox.style.display='none';
+    document.getElementById('zoomOpenRow').style.display='none';
+    zoomMsg('Drag on the image to select a region.');
+  }
+}
+
+function clearZoomSel(){
+  V.zoomSel=null;V.zoomMode=false;
+  zoomSelBox.style.display='none';
+  document.getElementById('zoomOpenRow').style.display='none';
+  document.getElementById('bZoomMode').classList.remove('on');
+  document.getElementById('bZoomMode').textContent='Draw Selection Box';
+  zoomMsg('Selection cleared. Drag a box on the image to select a region.');
+}
+
+// Drag on zoomLayer to draw selection box
+var _zd=null; // zoom drag state
+zoomLayer.addEventListener('pointerdown',function(e){
+  if(!V.zoomMode||!V.img)return;
+  e.preventDefault();
+  var r=zoomLayer.getBoundingClientRect();
+  var sx=e.clientX-r.left, sy=e.clientY-r.top;
+  _zd={sx:sx,sy:sy,ex:sx,ey:sy};
+  updateZoomSelBox();
+});
+zoomLayer.addEventListener('pointermove',function(e){
+  if(!_zd)return;
+  e.preventDefault();
+  var r=zoomLayer.getBoundingClientRect();
+  _zd.ex=e.clientX-r.left; _zd.ey=e.clientY-r.top;
+  updateZoomSelBox();
+});
+zoomLayer.addEventListener('pointerup',function(e){
+  if(!_zd)return;
+  finalizeZoomSel();
+  _zd=null;
+});
+zoomLayer.addEventListener('pointercancel',function(){_zd=null;});
+
+function updateZoomSelBox(){
+  if(!_zd)return;
+  var x=Math.min(_zd.sx,_zd.ex), y=Math.min(_zd.sy,_zd.ey);
+  var w=Math.abs(_zd.ex-_zd.sx), h=Math.abs(_zd.ey-_zd.sy);
+  zoomSelBox.style.display='block';
+  zoomSelBox.style.left=x+'px'; zoomSelBox.style.top=y+'px';
+  zoomSelBox.style.width=w+'px'; zoomSelBox.style.height=h+'px';
+}
+
+function finalizeZoomSel(){
+  if(!_zd)return;
+  var x=Math.min(_zd.sx,_zd.ex), y=Math.min(_zd.sy,_zd.ey);
+  var w=Math.abs(_zd.ex-_zd.sx), h=Math.abs(_zd.ey-_zd.sy);
+  if(w<10||h<10){zoomMsg('Selection too small - try again.');return;}
+
+  // Convert screen selection to image pixel coords
+  var id=V.zoomImgDisp;
+  var scaleX=V.img.width/id.w, scaleY=V.img.height/id.h;
+  var ix=Math.max(0,Math.round((x-id.x)*scaleX));
+  var iy=Math.max(0,Math.round((y-id.y)*scaleY));
+  var iw=Math.min(V.img.width-ix, Math.round(w*scaleX));
+  var ih=Math.min(V.img.height-iy, Math.round(h*scaleY));
+
+  if(iw<4||ih<4){zoomMsg('Selection outside image - try again.');return;}
+  V.zoomSel={x:ix,y:iy,w:iw,h:ih};
+
+  // Compute real-world size of selection
+  var canvasW=parseFloat(document.getElementById('zcw').value)||30;
+  var canvasH=parseFloat(document.getElementById('zch').value)||40;
+  var pxPerCmX=V.img.width/canvasW;
+  var pxPerCmY=V.img.height/canvasH;
+  var selCmW=(iw/pxPerCmX).toFixed(1);
+  var selCmH=(ih/pxPerCmY).toFixed(1);
+
+  V.zoomMode=false;
+  document.getElementById('bZoomMode').classList.remove('on');
+  document.getElementById('bZoomMode').textContent='Draw Selection Box';
+  document.getElementById('zoomOpenRow').style.display='flex';
+  zoomMsg('Selected region: '+selCmW+' x '+selCmH+' cm on canvas. Tap Open Zoomed View.');
+}
+
+function openZoomViewer(){
+  if(!V.zoomSel||!V.img){zoomMsg('Draw a selection first.');return;}
+
+  var canvasW=parseFloat(document.getElementById('zcw').value)||30;
+  var canvasH=parseFloat(document.getElementById('zch').value)||40;
+  var sel=V.zoomSel;
+
+  // Compute physical size of selection in cm
+  var pxPerCmX=V.img.width/canvasW;
+  var pxPerCmY=V.img.height/canvasH;
+  var selCmW=sel.w/pxPerCmX;
+  var selCmH=sel.h/pxPerCmY;
+
+  // Render the selected region.
+  // Target resolution: 10px per mm = 100px per cm (good screen resolution)
+  var pxPerCm=100;
+  var outW=Math.round(selCmW*pxPerCm);
+  var outH=Math.round(selCmH*pxPerCm);
+
+  var tc=document.createElement('canvas');
+  tc.width=outW; tc.height=outH;
+  var tctx=tc.getContext('2d');
+  tctx.drawImage(V.img, sel.x,sel.y,sel.w,sel.h, 0,0,outW,outH);
+
+  var dataURL=tc.toDataURL('image/jpeg',0.95);
+  zoomViewerImg.src=dataURL;
+
+  // Position image at center of viewer initially
+  var vw=window.innerWidth, vh=window.innerHeight;
+  // Start zoomed so the full selection fits on screen
+  var fitScale=Math.min(vw/outW, (vh-80)/outH);
+  ZV.scale=fitScale;
+  ZV.tx=(vw-outW*fitScale)/2;
+  ZV.ty=(vh-80-outH*fitScale)/2;
+  ZV.imgW=outW; ZV.imgH=outH;
+  applyZVTransform();
+
+  document.getElementById('zoomViewerInfo').textContent=
+    selCmW.toFixed(1)+' x '+selCmH.toFixed(1)+' cm  |  '+outW+' x '+outH+' px  |  Pinch to zoom, drag to pan';
+
+  zoomViewer.style.display='block';
+}
+
+function closeZoomViewer(){
+  zoomViewer.style.display='none';
+  zoomViewerImg.src='';
+}
+
+// ── ZOOM VIEWER PAN + PINCH ───────────────────────────────────
+var ZV={scale:1,tx:0,ty:0,imgW:0,imgH:0};
+var _zvPtrs={};  // active pointers by id
+var _zvLastPinchDist=null;
+var _zvLastPinchMid=null;
+var _zvDragStart=null;
+
+function applyZVTransform(){
+  zoomViewerImg.style.transform='translate('+ZV.tx+'px,'+ZV.ty+'px) scale('+ZV.scale+')';
+}
+
+zoomViewer.addEventListener('pointerdown',function(e){
+  if(e.target===document.getElementById('zoomViewerClose'))return;
+  e.preventDefault();
+  _zvPtrs[e.pointerId]={x:e.clientX,y:e.clientY};
+  var ptrs=Object.values(_zvPtrs);
+  if(ptrs.length===1){
+    _zvDragStart={tx:ZV.tx,ty:ZV.ty,px:e.clientX,py:e.clientY};
+    _zvLastPinchDist=null;
+  } else if(ptrs.length===2){
+    _zvDragStart=null;
+    _zvLastPinchDist=ptDist(ptrs[0],ptrs[1]);
+    _zvLastPinchMid=ptMid(ptrs[0],ptrs[1]);
+  }
+});
+
+zoomViewer.addEventListener('pointermove',function(e){
+  if(!_zvPtrs[e.pointerId])return;
+  e.preventDefault();
+  _zvPtrs[e.pointerId]={x:e.clientX,y:e.clientY};
+  var ptrs=Object.values(_zvPtrs);
+  if(ptrs.length===1&&_zvDragStart){
+    ZV.tx=_zvDragStart.tx+(e.clientX-_zvDragStart.px);
+    ZV.ty=_zvDragStart.ty+(e.clientY-_zvDragStart.py);
+    applyZVTransform();
+  } else if(ptrs.length===2&&_zvLastPinchDist!==null){
+    var dist=ptDist(ptrs[0],ptrs[1]);
+    var mid=ptMid(ptrs[0],ptrs[1]);
+    var ratio=dist/_zvLastPinchDist;
+    var newScale=Math.max(0.1,Math.min(20,ZV.scale*ratio));
+    // zoom toward pinch midpoint
+    ZV.tx=mid.x-(mid.x-ZV.tx)*newScale/ZV.scale;
+    ZV.ty=mid.y-(mid.y-ZV.ty)*newScale/ZV.scale;
+    ZV.scale=newScale;
+    _zvLastPinchDist=dist;
+    _zvLastPinchMid=mid;
+    applyZVTransform();
+  }
+});
+
+zoomViewer.addEventListener('pointerup',function(e){delete _zvPtrs[e.pointerId];if(Object.keys(_zvPtrs).length<2){_zvLastPinchDist=null;}});
+zoomViewer.addEventListener('pointercancel',function(e){delete _zvPtrs[e.pointerId];});
+
+function ptDist(a,b){var dx=a.x-b.x,dy=a.y-b.y;return Math.sqrt(dx*dx+dy*dy);}
+function ptMid(a,b){return{x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
+
 // ── AUTO DETECT ──────────────────────────────────────────────
 function detectCanvas(){
   if(!V.camOn){alert('Start camera first');return;}
@@ -412,30 +712,21 @@ function detectCanvas(){
     edge[y*W+x]=Math.sqrt(gx2*gx2+gy2*gy2)>35?255:0;
   }
   var bestScore=-1,bestRect=null;
-  var step=Math.round(Math.min(W,H)*0.05);
-  var margin=Math.round(Math.min(W,H)*0.05);
+  var step=Math.round(Math.min(W,H)*0.05),margin=Math.round(Math.min(W,H)*0.05);
   var cx=W/2,cy=H/2;
-  for(var ty=margin;ty<H*0.5;ty+=step)
-  for(var tx=margin;tx<W*0.5;tx+=step)
-  for(var bx=tx+W*0.2;bx<W-margin;bx+=step)
-  for(var by=ty+H*0.2;by<H-margin;by+=step){
-    var edgeScore=scoreRect(edge,W,Math.round(tx),Math.round(ty),Math.round(bx),Math.round(by));
-    var area=(bx-tx)*(by-ty)/(W*H);
-    var rcx=(tx+bx)/2,rcy=(ty+by)/2;
-    var centerPenalty=Math.sqrt(Math.pow((rcx-cx)/W,2)+Math.pow((rcy-cy)/H,2));
-    var score=edgeScore*0.5+area*6-centerPenalty*2;
-    if(score>bestScore){bestScore=score;bestRect={x:Math.round(tx),y:Math.round(ty),x2:Math.round(bx),y2:Math.round(by)};}
-  }
-  if(!bestRect||bestScore<0.5){pinSt('Could not detect canvas. Use Manual Corners.');return;}
-  V.pins=[
-    v2d(bestRect.x, bestRect.y, m),
-    v2d(bestRect.x2,bestRect.y, m),
-    v2d(bestRect.x, bestRect.y2,m),
-    v2d(bestRect.x2,bestRect.y2,m)
-  ];
-  pinSt('Detected - check dots, adjust if needed, then Start Tracking');
-  hint.textContent='Canvas detected';
-  hint.style.display='block';
+  for(var ty=margin;ty<H*0.5;ty+=step)for(var tx=margin;tx<W*0.5;tx+=step)
+    for(var bx=tx+W*0.2;bx<W-margin;bx+=step)for(var by=ty+H*0.2;by<H-margin;by+=step){
+      var edgeScore=scoreRect(edge,W,Math.round(tx),Math.round(ty),Math.round(bx),Math.round(by));
+      var area=(bx-tx)*(by-ty)/(W*H);
+      var rcx=(tx+bx)/2,rcy=(ty+by)/2;
+      var cp=Math.sqrt(Math.pow((rcx-cx)/W,2)+Math.pow((rcy-cy)/H,2));
+      var score=edgeScore*0.5+area*6-cp*2;
+      if(score>bestScore){bestScore=score;bestRect={x:Math.round(tx),y:Math.round(ty),x2:Math.round(bx),y2:Math.round(by)};}
+    }
+  if(!bestRect||bestScore<0.5){pinSt('Could not detect. Use Manual Corners.');return;}
+  V.pins=[v2d(bestRect.x,bestRect.y,m),v2d(bestRect.x2,bestRect.y,m),v2d(bestRect.x,bestRect.y2,m),v2d(bestRect.x2,bestRect.y2,m)];
+  pinSt('Detected - check dots, then Start Tracking');
+  hint.textContent='Canvas detected';hint.style.display='block';
   setTimeout(function(){hint.style.display='none';},2500);
 }
 function scoreRect(edge,W,x1,y1,x2,y2){
@@ -455,8 +746,7 @@ function samplePatches(){
   V.patches=[];
   for(var i=0;i<4;i++){
     var vp=d2v(V.pins[i].x,V.pins[i].y,m);
-    var vx=Math.max(ps,Math.min(W-ps-1,vp.x));
-    var vy=Math.max(ps,Math.min(H-ps-1,vp.y));
+    var vx=Math.max(ps,Math.min(W-ps-1,vp.x)),vy=Math.max(ps,Math.min(H-ps-1,vp.y));
     var patch=[];
     for(var dy=-ps;dy<=ps;dy+=2)for(var dx=-ps;dx<=ps;dx+=2){
       var idx=((vy+dy)*W+(vx+dx))*4;
@@ -484,8 +774,7 @@ function trackStep(){
   var tc=V.trackC.getContext('2d');tc.drawImage(vid,0,0,W,H);
   var imgd=tc.getImageData(0,0,W,H);
   for(var i=0;i<4;i++){
-    var ref=V.patches[i];
-    var bestDist=patchDist(imgd,W,H,ref.vx,ref.vy,ref.patch,ps);
+    var ref=V.patches[i],bestDist=patchDist(imgd,W,H,ref.vx,ref.vy,ref.patch,ps);
     var bestX=ref.vx,bestY=ref.vy;
     for(var dy=-sr;dy<=sr;dy+=3)for(var dx=-sr;dx<=sr;dx+=3){
       var nx=ref.vx+dx,ny=ref.vy+dy;
@@ -496,23 +785,16 @@ function trackStep(){
     if(bestDist<6000){ref.vx=bestX;ref.vy=bestY;V.pins[i]=v2d(bestX,bestY,m);}
   }
 }
-function toggleTracking(){
-  if(V.pins.length!==4){alert('Set all 4 corners first');return;}
-  if(V.tracking)stopTracking();else startTracking();
-}
+function toggleTracking(){if(V.pins.length!==4){alert('Set all 4 corners first');return;}if(V.tracking)stopTracking();else startTracking();}
 function startTracking(){
   if(!V.camOn){alert('Start camera first');return;}
   if(V.pins.length!==4){alert('Set all 4 corners first');return;}
   if(!samplePatches()){alert('Camera not ready');return;}
-  V.tracking=true;
-  document.getElementById('bTrack').textContent='Stop Tracking';
-  document.getElementById('bTrack').classList.add('on');
+  V.tracking=true;document.getElementById('bTrack').textContent='Stop Tracking';document.getElementById('bTrack').classList.add('on');
   pinSt('Tracking active - move phone slowly');
 }
 function stopTracking(){
-  V.tracking=false;
-  document.getElementById('bTrack').textContent='Start Tracking';
-  document.getElementById('bTrack').classList.remove('on');
+  V.tracking=false;document.getElementById('bTrack').textContent='Start Tracking';document.getElementById('bTrack').classList.remove('on');
   pinSt(V.pins.length===4?'Tracking stopped - corners still locked':'No corners set');
 }
 
@@ -520,36 +802,23 @@ function stopTracking(){
 function togglePin(){
   V.pinMode=!V.pinMode;
   var btn=document.getElementById('bPin');
-  if(V.pinMode){
-    btn.classList.add('on');pinOvl.style.display='block';
-    hint.style.display='block';
-    hint.textContent='Tap corner '+(V.pins.length+1)+' of 4 (TL TR BL BR)';
-  }else{
-    btn.classList.remove('on');pinOvl.style.display='none';hint.style.display='none';
-  }
+  if(V.pinMode){btn.classList.add('on');pinOvl.style.display='block';hint.style.display='block';hint.textContent='Tap corner '+(V.pins.length+1)+' of 4 (TL TR BL BR)';}
+  else{btn.classList.remove('on');pinOvl.style.display='none';hint.style.display='none';}
 }
 pinOvl.addEventListener('pointerdown',function(e){
   e.preventDefault();if(!V.pinMode)return;
   var r=pinOvl.getBoundingClientRect();
-  var px=(e.clientX-r.left)*(cvs.width/r.width);
-  var py=(e.clientY-r.top)*(cvs.height/r.height);
+  var px=(e.clientX-r.left)*(cvs.width/r.width),py=(e.clientY-r.top)*(cvs.height/r.height);
   if(V.pins.length<4){
     V.pins.push({x:px,y:py});
-    if(V.pins.length===4){
-      V.pinMode=false;document.getElementById('bPin').classList.remove('on');
-      pinOvl.style.display='none';hint.style.display='none';
-      pinSt('4 corners set - tap Start Tracking');
-    }else{
-      hint.textContent='Tap corner '+(V.pins.length+1)+' of 4';
-      pinSt(V.pins.length+' of 4 corners set');
-    }
+    if(V.pins.length===4){V.pinMode=false;document.getElementById('bPin').classList.remove('on');pinOvl.style.display='none';hint.style.display='none';pinSt('4 corners set - tap Start Tracking');}
+    else{hint.textContent='Tap corner '+(V.pins.length+1)+' of 4';pinSt(V.pins.length+' of 4 corners set');}
   }
 });
 function clearPins(){
   stopTracking();V.pins=[];V.patches=[];V.pinMode=false;
   document.getElementById('bPin').classList.remove('on');
-  pinOvl.style.display='none';hint.style.display='none';
-  pinSt('No corners set');
+  pinOvl.style.display='none';hint.style.display='none';pinSt('No corners set');
 }
 
 // ── CROP ─────────────────────────────────────────────────────
@@ -601,6 +870,7 @@ document.addEventListener('pointermove',function(e){
 });
 document.addEventListener('pointerup',function(){_d=null;});
 document.addEventListener('pointercancel',function(){_d=null;});
+
 function applyCrop(){
   if(!cImg.naturalWidth)return;
   var img=V.imgDisp,b=V.cropBox;
@@ -656,15 +926,19 @@ function resetAll(){
   stopTracking();
   V.img=null;V.outC=null;V.pins=[];V.patches=[];V.pinMode=false;
   V.lastCrop=null;V.gStyle=null;V.op=0.65;V.sc=1.0;V.gop=0.4;
+  V.zoomSel=null;V.zoomMode=false;
   cancelAnimationFrame(V.raf);V.raf=null;
   ctx.clearRect(0,0,cvs.width,cvs.height);
   cLayer.style.display='none';cImg.src='';
+  exitZoomMode();
   pinOvl.style.display='none';hint.style.display='none';
   document.getElementById('bPin').classList.remove('on');
   document.getElementById('pinSt').textContent='No corners set';
   document.getElementById('bApply').style.display='none';
   document.getElementById('cropBtns').style.display='none';
   document.getElementById('cropMsg').textContent='Load an image, drag the box, then tap Apply Crop';
+  document.getElementById('zoomOpenRow').style.display='none';
+  document.getElementById('bZoomMode').textContent='Draw Selection Box';
   document.querySelectorAll('[data-g]').forEach(function(e){e.classList.remove('on');});
   document.getElementById('gCustom').style.display='none';
   if(!V.camOn)ph.style.display='flex';
